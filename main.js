@@ -5,13 +5,6 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 var entities = [];
 
-const boundary = {
-  x: window.innerWidth / 2,
-  y: window.innerHeight / 2,
-  w: window.innerWidth,
-  h: window.innerHeight,
-}
-
 var mouseBoundary = {
   x: 0,
   y: 0,
@@ -25,8 +18,15 @@ draw();
 function setup() {
   document.body.appendChild(canvas);
 
-  canvas.width = boundary.w;
-  canvas.height = boundary.h;
+  canvas.width = 400;
+  canvas.height = 400;
+
+  let boundary = {
+    x: canvas.width * 0.5,
+    y: canvas.height * 0.5,
+    w: canvas.width,
+    h: canvas.height
+  }
 
   qtree.boundary = boundary;
 
@@ -36,15 +36,22 @@ function setup() {
     qtree.insert(entity);
   }
 
-  document.addEventListener('mousemove', (e) => {
-    mouseBoundary.x = e.clientX;
-    mouseBoundary.y = e.clientY;
-  })
+  // mouse support
+  document.addEventListener('mousemove', changeMouseBoundary);
+
+  // touch support
+  document.addEventListener('touchmove', changeMouseBoundary);
+
+  function changeMouseBoundary(e) {
+    let bcr = canvas.getBoundingClientRect()
+    mouseBoundary.x = (e.clientX || e.touches[0].clientX) - bcr.x;
+    mouseBoundary.y = (e.clientY || e.touches[0].clientY) - bcr.y;
+  }
 }
 
 function draw() {
   requestAnimationFrame(draw);
-  ctx.clearRect(0, 0, boundary.w, boundary.h);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   qtree.clearTree();
 

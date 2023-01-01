@@ -1,19 +1,20 @@
 // credit: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
 
 export default class QuadTree {
-  constructor(x, y, w, h, capacity = 1) {
+  constructor(x, y, w, h, capacity = 10) {
     this.boundary = {
       x, y, w, h
     }
-    this.entities = [];
+    this.objects = [];
     this.capacity = capacity;
     this.children = [];
   }
 
-  insert(boundary) {
+  insert(boundary, data) {
     if (!this.intersects(this.boundary, boundary)) return false;
-    if (this.entities.length < this.capacity && !this.children.length) {
-      this.entities.push(boundary);
+    boundary.data = data;
+    if (this.objects.length < this.capacity && !this.children.length) {
+      this.objects.push(boundary);
       return true;
     }
     if (!this.children.length) this.subdivide();
@@ -24,10 +25,13 @@ export default class QuadTree {
   }
 
   subdivide() {
-    this.children.push(new QuadTree(this.boundary.x - this.boundary.w / 4, this.boundary.y - this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2));
-    this.children.push(new QuadTree(this.boundary.x + this.boundary.w / 4, this.boundary.y - this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2));
-    this.children.push(new QuadTree(this.boundary.x - this.boundary.w / 4, this.boundary.y + this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2));
-    this.children.push(new QuadTree(this.boundary.x + this.boundary.w / 4, this.boundary.y + this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2));
+    let s1 = -1;
+    let s2 = 1;
+    for (let i = 0; i < 4; i++) {
+      // --, +-, ++, -+
+      i % 2 ? s1 *= -1 : s2 *= -1;
+      this.children.push(new QuadTree(this.boundary.x + s1 * this.boundary.w / 4, this.boundary.y + s2 * this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2, this.capacity));
+    }
   }
 
   queryRange(boundary) {
@@ -37,9 +41,9 @@ export default class QuadTree {
       return result;
     }
 
-    for (let i = 0; i < this.entities.length; i++) {
-      if (this.intersects(boundary, this.entities[i])) {
-        result.push(this.entities[i]);
+    for (let i = 0; i < this.objects.length; i++) {
+      if (this.intersects(boundary, this.objects[i])) {
+        result.push(this.objects[i]);
       }
     }
 
@@ -62,8 +66,8 @@ export default class QuadTree {
   show(ctx) {
     ctx.save();
 
-    for (let i = 0; i < this.entities.length; i++) {
-      let e = this.entities[i];
+    for (let i = 0; i < this.objects.length; i++) {
+      let e = this.objects[i];
       ctx.fillRect(e.x - e.w / 2, e.y - e.h / 2, e.w, e.h);
     }
 
@@ -78,12 +82,21 @@ export default class QuadTree {
   }
 
   clearTree() {
-    this.entities = [];
+    this.objects = [];
 
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].clearTree();
     }
 
     this.children = [];
+  }
+
+  array() {
+    let result = [];
+    result.push(...this.objects);
+    for (let i = 0; i < this.children.length; i++) {
+      result.push(...this.children[i].array());
+    }
+    return result;
   }
 }
