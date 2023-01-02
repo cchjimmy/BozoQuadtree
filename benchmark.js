@@ -52,7 +52,7 @@ function init() {
   var end = performance.now();
   var time = end - start;
 
-  var text = `Time spent for insert of ${amount} objects and retrieve once: ${time}ms. Retrieved: ${candidates.length} / ${qtree.array().length} (${candidates.length/qtree.array().length*100}%) objects.`;
+  var text = `Time spent for insert of ${amount} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${qtree.array().length} (${candidates.length/qtree.array().length*100}%) objects.`;
   console.log(text);
   let d = document.createElement('div');
   d.innerHTML = text;
