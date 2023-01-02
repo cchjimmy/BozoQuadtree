@@ -14,7 +14,7 @@ export default class BozoQuadtree {
 
   insert(boundary) {
     if (!this.intersects(this.boundary, boundary)) return false;
-    if (this.objects.length < this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
+    if (this.objects.length >= this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
     if (!this.children.length) {
       this.objects.push(boundary);
       return true;
