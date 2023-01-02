@@ -26,7 +26,7 @@ function setup() {
     y: canvas.height * 0.5,
     w: canvas.width,
     h: canvas.height
-  }
+  };
 
   qtree.boundary = boundary;
 
