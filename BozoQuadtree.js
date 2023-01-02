@@ -1,6 +1,6 @@
 // credit: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
 
-export default class QuadTree {
+export default class BozoQuadtree {
   constructor(x, y, w, h, capacity = 10) {
     this.boundary = {
       x, y, w, h
@@ -30,7 +30,7 @@ export default class QuadTree {
     for (let i = 0; i < 4; i++) {
       // --, +-, ++, -+
       i % 2 ? s1 *= -1 : s2 *= -1;
-      this.children.push(new QuadTree(this.boundary.x + s1 * this.boundary.w / 4, this.boundary.y + s2 * this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2, this.capacity));
+      this.children.push(new this.constructor(this.boundary.x + s1 * this.boundary.w / 4, this.boundary.y + s2 * this.boundary.h / 4, this.boundary.w / 2, this.boundary.h / 2, this.capacity));
     }
   }
 

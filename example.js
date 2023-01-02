@@ -1,6 +1,6 @@
-import QuadTree from "./QuadTree.js";
+import BozoQuadtree from "./BozoQuadtree.js";
 
-const qtree = new QuadTree;
+const qtree = new BozoQuadtree;
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 var entities = [];
@@ -44,8 +44,8 @@ function setup() {
 
   function changeMouseBoundary(e) {
     let bcr = canvas.getBoundingClientRect()
-    mouseBoundary.x = (e.clientX || e.touches[0].clientX) - bcr.x;
-    mouseBoundary.y = (e.clientY || e.touches[0].clientY) - bcr.y;
+    mouseBoundary.x = (e?.clientX || e?.touches[0]?.clientX) - bcr.x;
+    mouseBoundary.y = (e?.clientY || e?.touches[0]?.clientY) - bcr.y;
   }
 }
 
