@@ -3,4 +3,6 @@ A quadtree is a data structure used to store data on a 2D plane. This quadtree i
 
 In example.js, a sample space of 400px by 400px is created to store 5000 rectangles. The user can move their mouse cursor onto the region or for mobile users touch, to reveal rectangles within a radius of 100px.
 
+Go to https://cchjimmy.github.io/BozoQuadtree/ to see BozoQuadtree in action.
+
 ![thumbnail](./thumbnail.png)
