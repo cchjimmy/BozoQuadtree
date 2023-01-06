@@ -31,7 +31,7 @@ function setup() {
   qtree.boundary = boundary;
 
   for (let i = 0; i < 5000; i++) {
-    let entity = { x: Math.random() * boundary.w, y: Math.random() * boundary.h, w: Math.random() * 6, h: Math.random() * 6 }
+    let entity = { x: Math.random() * boundary.w, y: Math.random() * boundary.h, w: random(5, 10), h: random(5, 10) }
     entities.push(entity);
     qtree.insert(entity);
   }
@@ -67,6 +67,8 @@ function draw() {
   for (let i = 0; i < visible.length; i++) {
     let v = visible[i];
     if (((v.x - mouseBoundary.x) ** 2 + (v.y - mouseBoundary.y) ** 2) ** 0.5 > mouseBoundary.w / 2) continue;
-    ctx.fillRect(v.x - v.w / 2, v.y - v.h / 2, v.w, v.h);
+    ctx.strokeRect(v.x - v.w / 2, v.y - v.h / 2, v.w, v.h);
   }
 }
+
+function random(min, max) { return Math.random() * (max - min) + min };

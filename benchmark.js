@@ -52,8 +52,10 @@ function init() {
   var end = performance.now();
   var time = end - start;
 
-  var text = `Time spent for insert of ${amount} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${qtree.array().length} (${candidates.length/qtree.array().length*100}%) objects.`;
-  console.log(text);
+  let total = qtree.array().length;
+
+  var text = `Time spent for insert of ${amount} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
+  console.log(`retrieved ${candidates.length} objects in ${time}ms`);
   let d = document.createElement('div');
   d.innerHTML = text;
   document.body.appendChild(d);

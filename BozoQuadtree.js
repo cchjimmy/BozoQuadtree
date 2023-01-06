@@ -13,22 +13,16 @@ export default class BozoQuadtree {
   }
 
   insert(boundary) {
-    if (!this.intersects(this.boundary, boundary)) return false;
+    if (!this.intersects(this.boundary, boundary)) return;
     if (this.objects.length >= this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
-    if (!this.children.length) {
-      this.objects.push(boundary);
-      return true;
-    }
-    for (let i = 0; i < this.children.length; i++) {
-      this.children[i].insert(boundary);
-    }
+    this.objects.push(boundary);
+    if (!this.children.length) return;
     for (let j = 0; j < this.objects.length; j++) {
       for (let i = 0; i < this.children.length; i++) {
         this.children[i].insert(this.objects[j]);
       }
     }
     this.objects = [];
-    return false;
   }
 
   subdivide() {
@@ -61,8 +55,6 @@ export default class BozoQuadtree {
 
     result.push(...this.objects);
 
-    if (!this.children.length) return result;
-
     for (let i = 0; i < this.children.length; i++) {
       result.push(...this.children[i].queryRange(boundary));
     }
@@ -73,7 +65,9 @@ export default class BozoQuadtree {
   }
 
   intersects(boundary1, boundary2) {
-    return Math.max(boundary1.x - boundary1.w * 0.5, boundary2.x - boundary2.w * 0.5) < Math.min(boundary1.x + boundary1.w * 0.5, boundary2.x + boundary2.w * 0.5) && Math.max(boundary1.y - boundary1.h * 0.5, boundary2.y - boundary2.h * 0.5) < Math.min(boundary1.y + boundary1.h * 0.5, boundary2.y + boundary2.h * 0.5);
+    function max(a, b) { return a >= b ? a : b; }
+    function min(a, b) { return a >= b ? b : a; }
+    return max(boundary1.x - boundary1.w * 0.5, boundary2.x - boundary2.w * 0.5) < min(boundary1.x + boundary1.w * 0.5, boundary2.x + boundary2.w * 0.5) && max(boundary1.y - boundary1.h * 0.5, boundary2.y - boundary2.h * 0.5) < min(boundary1.y + boundary1.h * 0.5, boundary2.y + boundary2.h * 0.5);
   }
 
   clearTree() {
