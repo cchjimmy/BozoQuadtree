@@ -3,6 +3,7 @@ import BozoQuadtree from "./BozoQuadtree.js";
 const qtree = new BozoQuadtree;
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
+const fps = document.querySelector('span');
 var entities = [];
 
 var mouseBoundary = {
@@ -49,8 +50,9 @@ function setup() {
   }
 }
 
+var last = 0;
 function draw() {
-  requestAnimationFrame(draw);
+  let now = performance.now();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   qtree.clearTree();
@@ -69,6 +71,11 @@ function draw() {
     if (((v.x - mouseBoundary.x) ** 2 + (v.y - mouseBoundary.y) ** 2) ** 0.5 > mouseBoundary.w / 2) continue;
     ctx.strokeRect(v.x - v.w / 2, v.y - v.h / 2, v.w, v.h);
   }
+
+  fps.innerText = Math.round(1/(now - last)*1000);
+  last = now;
+
+  requestAnimationFrame(draw);
 }
 
 function random(min, max) { return Math.random() * (max - min) + min };
