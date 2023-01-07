@@ -51,11 +51,10 @@ export default class BozoQuadtree {
   queryRange(boundary) {
     let result = [];
 
-    if (!this.intersects(this.boundary, boundary)) return result;
-
     result.push(...this.objects);
 
     for (let i = 0; i < this.children.length; i++) {
+      if (!this.intersects(this.children[i].boundary, boundary)) continue;
       result.push(...this.children[i].queryRange(boundary));
     }
 
