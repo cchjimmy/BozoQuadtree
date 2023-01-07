@@ -14,8 +14,8 @@ export default class BozoQuadtree {
 
   insert(boundary) {
     if (!this.intersects(this.boundary, boundary)) return;
-    if (this.objects.length >= this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
     this.objects.push(boundary);
+    if (this.objects.length >= this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
     if (!this.children.length) return;
     for (let j = 0; j < this.objects.length; j++) {
       for (let i = 0; i < this.children.length; i++) {
@@ -59,15 +59,12 @@ export default class BozoQuadtree {
       result.push(...this.children[i].queryRange(boundary));
     }
 
-    result = [...new Set(result)];
-
-    return result;
+    return [...new Set(result)];
   }
 
   intersects(boundary1, boundary2) {
-    function max(a, b) { return a >= b ? a : b; }
-    function min(a, b) { return a >= b ? b : a; }
-    return max(boundary1.x - boundary1.w * 0.5, boundary2.x - boundary2.w * 0.5) < min(boundary1.x + boundary1.w * 0.5, boundary2.x + boundary2.w * 0.5) && max(boundary1.y - boundary1.h * 0.5, boundary2.y - boundary2.h * 0.5) < min(boundary1.y + boundary1.h * 0.5, boundary2.y + boundary2.h * 0.5);
+    // squaring is for eliminating negative values
+    return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w + boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h + boundary2.h) * 0.5) ** 2;
   }
 
   clearTree() {
@@ -87,7 +84,6 @@ export default class BozoQuadtree {
       result.push(...this.children[i].array());
     }
     // credit: https://stackoverflow.com/questions/9229645/remove-duplicate-values-from-js-array
-    result = [...new Set(result)];
-    return result;
+    return [...new Set(result)];
   }
 }
