@@ -5,8 +5,9 @@ import BozoQuadtree from './BozoQuadtree.js';
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 const qtree = new BozoQuadtree;
-var objects = [];
-var amount = 10000;
+const objects = [];
+const amount = 10000;
+const maxObjectSize = 64;
 
 init();
 
@@ -16,14 +17,12 @@ function init() {
   canvas.width = 800;
   canvas.height = 600;
 
-  qtree.boundary = {
+  qtree.setBounds({
     x: canvas.width * 0.5,
     y: canvas.height * 0.5,
     w: canvas.width,
     h: canvas.height
-  };
-
-  var maxObjectSize = 64
+  });
 
   for (let i = 0; i < amount; i++) {
     objects.push({
@@ -34,7 +33,7 @@ function init() {
     });
   };
 
-  let cursor = {
+  const cursor = {
     x: randMinMax(120, canvas.width - 120),
     y: randMinMax(120, canvas.height - 120),
     w: 32,
@@ -55,7 +54,7 @@ function init() {
   let total = qtree.array().length;
 
   var text = `Time spent for insert of ${amount} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
-  console.log(`retrieved ${candidates.length} objects in ${time}ms`);
+  console.log(`retrieved ${candidates.length} objects in ${time}ms`, qtree);
   let d = document.createElement('div');
   d.innerHTML = text;
   document.body.appendChild(d);
@@ -73,7 +72,7 @@ function init() {
   drawQuadtree(qtree, ctx);
 
   ctx.strokeStyle = 'yellow';
-  drawIntersectedBoundaries(qtree, ctx);
+  drawIntersectedBoundaries(qtree, cursor, ctx);
 
   ctx.strokeStyle = 'blue';
   strokeRectangle(cursor, ctx);
@@ -92,13 +91,13 @@ function init() {
     }
   }
 
-  function drawIntersectedBoundaries(node, ctx) {
+  function drawIntersectedBoundaries(node, boundary, ctx) {
     let b = node.boundary;
-    if (node.intersects(b, cursor)) strokeRectangle(b, ctx);
+    if (node.intersects(b, boundary)) strokeRectangle(b, ctx);
     if (!node.children.length) return;
     let c = node.children;
     for (let i = 0; i < c.length; i++) {
-      drawIntersectedBoundaries(c[i], ctx);
+      drawIntersectedBoundaries(c[i], boundary, ctx);
     }
   }
 

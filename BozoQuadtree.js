@@ -1,59 +1,66 @@
 // reference: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
 
 export default class BozoQuadtree {
-  constructor(boundary, maxDepth = 4) {
-    this.boundary = boundary
+  constructor(boundary = { x: 50, y: 50, w: 100, h: 100 }, maxDepth = 4) {
     this.objects = [];
     this.children = [];
     this.maxDepth = maxDepth;
     this.depth = 0;
+    this.setBounds(boundary);
+  }
+
+  setBounds(boundary) {
+    this.boundary = boundary;
+    let halfWidth = boundary.w * 0.5;
+    let halfHeight = boundary.h * 0.5;
+    this.childBoundaries = [
+      {
+        x: this.boundary.x - halfWidth * 0.5,
+        y: this.boundary.y - halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      },
+      {
+        x: this.boundary.x + halfWidth * 0.5,
+        y: this.boundary.y - halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      },
+      {
+        x: this.boundary.x + halfWidth * 0.5,
+        y: this.boundary.y + halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      },
+      {
+        x: this.boundary.x - halfWidth * 0.5,
+        y: this.boundary.y + halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      }
+    ];
   }
 
   insert(boundary) {
     if (this.depth == 0 && !this.intersects(this.boundary, boundary)) return;
-    this.objects.push(boundary);
-    if (!this.children.length && this.depth < this.maxDepth) this.subdivide();
-    if (!this.children.length) return;
-    for (let j = 0; j < this.objects.length; j++) {
-      for (let i = 0; i < this.children.length; i++) {
-        if (this.intersects(this.children[i].boundary, this.objects[j])) this.children[i].insert(this.objects[j]);
-      }
+
+    if (this.depth == this.maxDepth) {
+      this.objects.push(boundary);
+      return;
     }
-    this.objects = [];
+
+    if (!this.children.length) this.subdivide();
+    
+    for (let i = 0; i < this.childBoundaries.length; i++) {
+      if (!this.intersects(this.childBoundaries[i], boundary)) continue;
+      this.children[i].insert(boundary);
+    }
   }
 
   subdivide() {
-    let halfWidth = this.boundary.w * 0.5;
-    let halfHeight = this.boundary.h * 0.5;
-    let boundaries = [
-      {
-        x: this.boundary.x - halfWidth * 0.5,
-        y: this.boundary.y - halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      },
-      {
-        x: this.boundary.x + halfWidth * 0.5,
-        y: this.boundary.y - halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      },
-      {
-        x: this.boundary.x + halfWidth * 0.5,
-        y: this.boundary.y + halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      },
-      {
-        x: this.boundary.x - halfWidth * 0.5,
-        y: this.boundary.y + halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      }];
-    for (let i = 0; i < boundaries.length; i++) {
-      let child = new this.constructor(boundaries[i], this.maxDepth);
-      child.depth = this.depth + 1;
-      this.children.push(child);
+    for (let i = 0; i < this.childBoundaries.length; i++) {
+      this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
+      this.children[i].depth = this.depth + 1;
     }
   }
 

@@ -2,14 +2,12 @@ import BozoQuadtree from "./BozoQuadtree.js";
 
 const qtree = new BozoQuadtree;
 const canvas = document.createElement('canvas');
+canvas.width = 400;
+canvas.height = 400;
 const ctx = canvas.getContext('2d');
 const fps = document.querySelector('span');
 var entities = [];
-canvas.width = 400;
-canvas.height = 400;
 var last = 0;
-
-document.body.appendChild(canvas);
 
 var mouseBoundary = {
   x: 0,
@@ -29,12 +27,14 @@ init();
 draw();
 
 function init() {
-  qtree.boundary = {
+  document.body.appendChild(canvas);
+
+  qtree.setBounds({
     x: canvas.width * 0.5,
     y: canvas.height * 0.5,
     w: canvas.width,
     h: canvas.height
-  };
+  });
 
   for (let i = 0; i < 5000; i++) {
     entities.push({
