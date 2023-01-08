@@ -1,10 +1,8 @@
-// credit: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
+// reference: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
 
 export default class BozoQuadtree {
-  constructor(x, y, w, h, capacity = 10, maxDepth = 4) {
-    this.boundary = {
-      x, y, w, h
-    }
+  constructor(boundary, capacity = 10, maxDepth = 4) {
+    this.boundary = boundary
     this.objects = [];
     this.capacity = capacity;
     this.children = [];
@@ -28,37 +26,48 @@ export default class BozoQuadtree {
   subdivide() {
     let halfWidth = this.boundary.w * 0.5;
     let halfHeight = this.boundary.h * 0.5;
-    let nextDepth = this.depth + 1;
-    let child;
-
-    child = new this.constructor(this.boundary.x - halfWidth * 0.5, this.boundary.y - halfHeight * 0.5, halfWidth, halfHeight, this.maxDepth);
-    child.depth = nextDepth;
-    this.children.push(child);
-
-    child = new this.constructor(this.boundary.x + halfWidth * 0.5, this.boundary.y - halfHeight * 0.5, halfWidth, halfHeight, this.maxDepth);
-    child.depth = nextDepth;
-    this.children.push(child);
-
-    child = new this.constructor(this.boundary.x + halfWidth * 0.5, this.boundary.y + halfHeight * 0.5, halfWidth, halfHeight, this.maxDepth);
-    child.depth = nextDepth;
-    this.children.push(child);
-
-    child = new this.constructor(this.boundary.x - halfWidth * 0.5, this.boundary.y + halfHeight * 0.5, halfWidth, halfHeight, this.maxDepth);
-    child.depth = nextDepth;
-    this.children.push(child);
+    let boundaries = [
+      {
+        x: this.boundary.x - halfWidth * 0.5,
+        y: this.boundary.y - halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      },
+      {
+        x: this.boundary.x + halfWidth * 0.5,
+        y: this.boundary.y - halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      },
+      {
+        x: this.boundary.x + halfWidth * 0.5,
+        y: this.boundary.y + halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      },
+      {
+        x: this.boundary.x - halfWidth * 0.5,
+        y: this.boundary.y + halfHeight * 0.5,
+        w: halfWidth,
+        h: halfHeight
+      }];
+    for (let i = 0; i < boundaries.length; i++) {
+      let child = new this.constructor(boundaries[i], this.maxDepth);
+      child.depth = this.depth + 1;
+      this.children.push(child);
+    }
   }
 
   queryRange(boundary) {
     let result = [];
 
-    result.push(...this.objects);
+    if (this.objects.length) result.push(...this.objects);
 
     for (let i = 0; i < this.children.length; i++) {
-      if (!this.intersects(this.children[i].boundary, boundary)) continue;
-      result.push(...this.children[i].queryRange(boundary));
+      if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
     }
 
-    return [...new Set(result)];
+    return result.length ? [...new Set(result)] : [];
   }
 
   intersects(boundary1, boundary2) {
@@ -78,11 +87,11 @@ export default class BozoQuadtree {
 
   array() {
     let result = [];
-    result.push(...this.objects);
+    if (this.objects.length) result.push(...this.objects);
     for (let i = 0; i < this.children.length; i++) {
       result.push(...this.children[i].array());
     }
     // credit: https://stackoverflow.com/questions/9229645/remove-duplicate-values-from-js-array
-    return [...new Set(result)];
+    return result.length ? [...new Set(result)] : [];
   }
 }

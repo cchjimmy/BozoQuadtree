@@ -25,19 +25,16 @@ const left = { x: 0, y: canvas.height * 0.5, w: thickness, h: canvas.height - th
 const right = { x: canvas.width, y: canvas.height * 0.5, w: thickness, h: canvas.height - thickness };
 const bottom = { x: canvas.width * 0.5, y: canvas.height, w: canvas.width, h: thickness };
 
-
 init();
 draw();
 
 function init() {
-  let boundary = {
+  qtree.boundary = {
     x: canvas.width * 0.5,
     y: canvas.height * 0.5,
     w: canvas.width,
     h: canvas.height
   };
-
-  qtree.boundary = boundary;
 
   for (let i = 0; i < 800; i++) {
     entities.push({
@@ -79,30 +76,18 @@ function draw() {
   let all = qtree.array();
   for (let i = 0; i < all.length; i++) {
     let e = all[i];
+    if (e.x + e.w * 0.5 > canvas.width || e.x - e.w * 0.5 < 0) e.vx *= -1;
+    if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
     e.x += e.vx * dt;
     e.y += e.vy * dt;
 
+    e.color = 'black';
     let nearby = qtree.queryRange(e);
-    let intersected = false;
     for (let i = 0; i < nearby.length; i++) {
       if (nearby[i] == e || !qtree.intersects(nearby[i], e)) continue;
-      intersected = true;
+      e.color = 'red';
       break;
     }
-    e.color = intersected ? 'red' : 'black';
-  }
-
-  let edges = [
-    ...qtree.queryRange(top),
-    ...qtree.queryRange(left),
-    ...qtree.queryRange(right),
-    ...qtree.queryRange(bottom),
-  ];
-  edges = edges.filter((v, i) => edges.indexOf(v) == i);
-  for (let i = 0; i < edges.length; i++) {
-    let e = edges[i];
-    if (qtree.intersects(e, left) || qtree.intersects(e, right)) e.vx *= -1;
-    if (qtree.intersects(e, top) || qtree.intersects(e, bottom)) e.vy *= -1;
   }
 
   let inRange = qtree.queryRange(mouseBoundary);
