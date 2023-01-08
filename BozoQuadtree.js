@@ -11,13 +11,13 @@ export default class BozoQuadtree {
   }
 
   insert(boundary) {
-    if (!this.intersects(this.boundary, boundary)) return;
+    if (this.depth == 0 && !this.intersects(this.boundary, boundary)) return;
     this.objects.push(boundary);
     if (this.objects.length >= this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
     if (!this.children.length) return;
     for (let j = 0; j < this.objects.length; j++) {
       for (let i = 0; i < this.children.length; i++) {
-        this.children[i].insert(this.objects[j]);
+        if (this.intersects(this.children[i].boundary, this.objects[j])) this.children[i].insert(this.objects[j]);
       }
     }
     this.objects = [];
@@ -67,7 +67,7 @@ export default class BozoQuadtree {
       if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
     }
 
-    return result.length ? [...new Set(result)] : [];
+    return result.length ? [...new Set(result)] : result;
   }
 
   intersects(boundary1, boundary2) {
@@ -92,6 +92,6 @@ export default class BozoQuadtree {
       result.push(...this.children[i].array());
     }
     // credit: https://stackoverflow.com/questions/9229645/remove-duplicate-values-from-js-array
-    return result.length ? [...new Set(result)] : [];
+    return result.length ? [...new Set(result)] : result;
   }
 }
