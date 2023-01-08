@@ -36,15 +36,14 @@ function init() {
     h: canvas.height
   };
 
-  for (let i = 0; i < 800; i++) {
+  for (let i = 0; i < 5000; i++) {
     entities.push({
       x: random(10, canvas.width - 10),
       y: random(10, canvas.height - 10),
       w: random(5, 10),
       h: random(5, 10),
       vx: random(-20, 20),
-      vy: random(-20, 20),
-      color: 'black'
+      vy: random(-20, 20)
     });
   }
 
@@ -73,30 +72,30 @@ function draw() {
     qtree.insert(entities[i]);
   }
 
+  let edges = [
+    ...qtree.queryRange(top),
+    ...qtree.queryRange(left),
+    ...qtree.queryRange(right),
+    ...qtree.queryRange(bottom)
+  ];
+  edges = [...new Set(edges)];
+  for (let i = 0; i < edges.length; i++) {
+    let e = edges[i];
+    if (e.x + e.w * 0.5 > canvas.width || e.x - e.w * 0.5 < 0) e.vx *= -1;
+    if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
+  }
+
   let all = qtree.array();
   for (let i = 0; i < all.length; i++) {
     let e = all[i];
-    if (e.x + e.w * 0.5 > canvas.width || e.x - e.w * 0.5 < 0) e.vx *= -1;
-    if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
     e.x += e.vx * dt;
     e.y += e.vy * dt;
-
-    e.color = 'black';
-    let nearby = qtree.queryRange(e);
-    for (let i = 0; i < nearby.length; i++) {
-      if (nearby[i] == e || !qtree.intersects(nearby[i], e)) continue;
-      e.color = 'red';
-      break;
-    }
   }
 
   let inRange = qtree.queryRange(mouseBoundary);
   for (let i = 0; i < inRange.length; i++) {
     if ((inRange[i].y - mouseBoundary.y) ** 2 + (inRange[i].x - mouseBoundary.x) ** 2 > (mouseBoundary.w * 0.5) ** 2) continue;
-    ctx.save();
-    ctx.strokeStyle = inRange[i].color;
     strokeRectangle(inRange[i]);
-    ctx.restore();
   }
 
   fps.innerText = Math.round(1 / dt);
