@@ -52,7 +52,7 @@ export default class BozoQuadtree {
         h: halfHeight
       }];
     for (let i = 0; i < boundaries.length; i++) {
-      let child = new this.constructor(boundaries[i], this.maxDepth);
+      let child = new this.constructor(boundaries[i], this.capacity, this.maxDepth);
       child.depth = this.depth + 1;
       this.children.push(child);
     }
