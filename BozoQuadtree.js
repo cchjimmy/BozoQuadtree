@@ -1,10 +1,9 @@
 // reference: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
 
 export default class BozoQuadtree {
-  constructor(boundary, capacity = 10, maxDepth = 4) {
+  constructor(boundary, maxDepth = 4) {
     this.boundary = boundary
     this.objects = [];
-    this.capacity = capacity;
     this.children = [];
     this.maxDepth = maxDepth;
     this.depth = 0;
@@ -13,7 +12,7 @@ export default class BozoQuadtree {
   insert(boundary) {
     if (this.depth == 0 && !this.intersects(this.boundary, boundary)) return;
     this.objects.push(boundary);
-    if (this.objects.length >= this.capacity && !this.children.length && this.depth < this.maxDepth) this.subdivide();
+    if (!this.children.length && this.depth < this.maxDepth) this.subdivide();
     if (!this.children.length) return;
     for (let j = 0; j < this.objects.length; j++) {
       for (let i = 0; i < this.children.length; i++) {
@@ -52,7 +51,7 @@ export default class BozoQuadtree {
         h: halfHeight
       }];
     for (let i = 0; i < boundaries.length; i++) {
-      let child = new this.constructor(boundaries[i], this.capacity, this.maxDepth);
+      let child = new this.constructor(boundaries[i], this.maxDepth);
       child.depth = this.depth + 1;
       this.children.push(child);
     }
