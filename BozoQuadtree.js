@@ -10,6 +10,7 @@ export default class BozoQuadtree {
   }
 
   setBounds(boundary) {
+    this.clearTree();
     this.boundary = boundary;
     let halfWidth = boundary.w * 0.5;
     let halfHeight = boundary.h * 0.5;
@@ -44,17 +45,17 @@ export default class BozoQuadtree {
   insert(boundary) {
     if (this.depth == 0 && !this.intersects(this.boundary, boundary)) return;
 
-    if (this.depth == this.maxDepth) {
-      this.objects.push(boundary);
-      return;
+    if (this.depth < this.maxDepth) {
+      if (!this.children.length) this.subdivide();
+
+      for (let i = 0; i < this.childBoundaries.length; i++) {
+        if (!this.contains(this.childBoundaries[i], boundary)) continue;
+        this.children[i].insert(boundary);
+        return;
+      }
     }
 
-    if (!this.children.length) this.subdivide();
-    
-    for (let i = 0; i < this.childBoundaries.length; i++) {
-      if (!this.intersects(this.childBoundaries[i], boundary)) continue;
-      this.children[i].insert(boundary);
-    }
+    this.objects.push(boundary);
   }
 
   subdivide() {
@@ -67,7 +68,9 @@ export default class BozoQuadtree {
   queryRange(boundary) {
     let result = [];
 
-    if (this.objects.length) result.push(...this.objects);
+    for (let i = 0; i < this.objects.length; i++) {
+      if (this.intersects(boundary, this.objects[i])) result.push(this.objects[i]);
+    }
 
     for (let i = 0; i < this.children.length; i++) {
       if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
@@ -79,6 +82,10 @@ export default class BozoQuadtree {
   intersects(boundary1, boundary2) {
     // squaring is for eliminating negative values
     return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w + boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h + boundary2.h) * 0.5) ** 2;
+  }
+
+  contains(boundary1, boundary2) {
+    return boundary1.x - boundary2.x < (boundary1.w - boundary2.w) * 0.5 && boundary1.x - boundary2.x > (boundary2.w - boundary1.w) * 0.5 && boundary1.y - boundary2.y < (boundary1.h - boundary2.h) * 0.5 && boundary1.y - boundary2.y > (boundary2.h - boundary1.h) * 0.5
   }
 
   clearTree() {
