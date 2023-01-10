@@ -59,7 +59,7 @@ export default class BozoQuadtree {
 
     // if boundary.tree is defined, this means this object has been added to the tree before
     if (boundary.tree) {
-      // if the tree is the same no need to move the object
+      // if the tree is the same, no need to move the object
       if (boundary.tree == this) return;
       // otherwise move the object to this tree
       this.objects.push(boundary);
@@ -149,11 +149,5 @@ export default class BozoQuadtree {
 
   array() {
     return [...this.allObjects];
-    // let result = [];
-    // result.push(...this.objects);
-    // for (let i = 0; i < this.children.length; i++) {
-    //   if (this.children[i]) result.push(...this.children[i].array())
-    // }
-    // return result;
   }
 }
