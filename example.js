@@ -7,7 +7,7 @@ canvas.height = 400;
 const ctx = canvas.getContext('2d');
 const fps = document.querySelector('span');
 var last = 0;
-const numberOfObjects = 5000;
+const numberOfObjects = 10000;
 var mouseBoundary = {
   x: 0,
   y: 0,
@@ -104,7 +104,7 @@ function draw() {
     strokeRectangle(e);
   }
 
-  console.log('all:', all.length, ', edges:', edges.length, ', inRange:', inRange.length)
+  // console.log('all:', all.length, ', edges:', edges.length, ', inRange:', inRange.length)
 
   fps.innerText = Math.round(1 / dt);
   last = now;
