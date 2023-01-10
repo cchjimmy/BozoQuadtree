@@ -57,15 +57,27 @@ export default class BozoQuadtree {
       }
     }
 
-    let object = boundary.relocate ? boundary : { object: boundary, tree: this };
-
-    this.objects.push(object);
-    if (object.relocate) {
-      delete object.relocate;
-      object.tree = this;
+    // if boundary.tree is defined, this means this object has been added to the tree before
+    if (boundary.tree) {
+      // if the tree is the same no need to move the object
+      if (boundary.tree == this) return;
+      // otherwise move the object to this tree
+      this.objects.push(boundary);
+      for (let i = 0; i < boundary.tree.objects.length; i++) {
+        if (boundary.tree.objects[i].object != boundary.object) continue;
+        boundary.tree.objects.splice(i, 1);
+        break;
+      }
+      // change the tree parameter to this tree
+      boundary.tree = this;
       return;
     }
-
+    // if the object has not been added before, instantiate an object with object and tree parameters
+    let object = {
+      object: boundary, // the object itself
+      tree: this // this tree
+    }
+    this.objects.push(object);
     this.allObjects.push(object);
   }
 
@@ -123,9 +135,6 @@ export default class BozoQuadtree {
   }
 
   relocate(object) {
-    object.relocate = true;
-    object.tree.objects.splice(object.tree.objects.findIndex(v => v.object == object.object), 1);
-    // this.restructure();
     this.insert(object);
   }
 

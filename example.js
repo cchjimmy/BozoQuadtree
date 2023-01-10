@@ -75,7 +75,6 @@ function draw() {
     ...qtree.queryRange(right),
     ...qtree.queryRange(bottom)
   ];
-  edges = [...new Set(edges)];
   for (let i = 0; i < edges.length; i++) {
     let e = edges[i].object;
     // strokeRectangle(e);
@@ -105,7 +104,7 @@ function draw() {
     strokeRectangle(e);
   }
 
-  // console.log(qtree, 'all:', all.length, ', edges:', edges.length, ', inRange:', inRange.length)
+  console.log('all:', all.length, ', edges:', edges.length, ', inRange:', inRange.length)
 
   fps.innerText = Math.round(1 / dt);
   last = now;
