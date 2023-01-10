@@ -65,10 +65,6 @@ function draw() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // ctx.strokeStyle = 'lightgrey';
-  // drawQuadtree(qtree)
-
-  // ctx.strokeStyle='green';
   let edges = [
     ...qtree.queryRange(top),
     ...qtree.queryRange(left),
@@ -77,26 +73,17 @@ function draw() {
   ];
   for (let i = 0; i < edges.length; i++) {
     let e = edges[i].object;
-    // strokeRectangle(e);
     if (e.x + e.w * 0.5 > canvas.width || e.x - e.w * 0.5 < 0) e.vx *= -1;
     if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
   }
 
   let all = qtree.array();
   for (let i = 0; i < all.length; i++) {
-    let e = all[i].object;
-    e.x += e.vx * dt;
-    e.y += e.vy * dt;
-
-    // ctx.strokeStyle='black';
-    // strokeRectangle(e);
-
-    // ctx.strokeStyle='red';
-    // strokeRectangle(all[i].tree.boundary);
+    all[i].object.x += all[i].object.vx * dt;
+    all[i].object.y += all[i].object.vy * dt;
     qtree.relocate(all[i]);
   }
 
-  // ctx.strokeStyle = 'red';
   let inRange = qtree.queryRange(mouseBoundary);
   for (let i = 0; i < inRange.length; i++) {
     let e = inRange[i].object;
