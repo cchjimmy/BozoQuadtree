@@ -7,6 +7,7 @@ export default class BozoQuadtree {
     this.maxDepth = maxDepth;
     this.depth = 0;
     this.setBounds(boundary);
+    this.allObjects = [];
   }
 
   setBounds(boundary) {
@@ -43,40 +44,45 @@ export default class BozoQuadtree {
   }
 
   insert(boundary) {
-    if (this.depth == 0 && !this.intersects(this.boundary, boundary)) return;
-
     if (this.depth < this.maxDepth) {
-      if (!this.children.length) this.subdivide();
-
       for (let i = 0; i < this.childBoundaries.length; i++) {
-        if (!this.contains(this.childBoundaries[i], boundary)) continue;
+        if (!this.contains(this.childBoundaries[i], boundary.object ?? boundary)) continue;
+        if (!this.children[i]) {
+          this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
+          this.children[i].allObjects = this.allObjects;
+          this.children[i].depth = this.depth + 1;
+        }
         this.children[i].insert(boundary);
         return;
       }
     }
 
-    this.objects.push(boundary);
-  }
+    let object = boundary.relocate ? boundary : { object: boundary, tree: this };
 
-  subdivide() {
-    for (let i = 0; i < this.childBoundaries.length; i++) {
-      this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
-      this.children[i].depth = this.depth + 1;
+    this.objects.push(object);
+    if (object.relocate) {
+      delete object.relocate;
+      object.tree = this;
+      return;
     }
+
+    this.allObjects.push(object);
   }
 
   queryRange(boundary) {
     let result = [];
-
     for (let i = 0; i < this.objects.length; i++) {
-      if (this.intersects(boundary, this.objects[i])) result.push(this.objects[i]);
+      if (this.intersects(boundary, this.objects[i].object)) result.push(this.objects[i]);
     }
-
     for (let i = 0; i < this.children.length; i++) {
-      if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
+      if (!this.children[i]) continue;
+      if (this.intersects(this.children[i].boundary, boundary)) {
+        result.push(...this.children[i].queryRange(boundary))
+        continue;
+      }
+      if (this.contains(boundary, this.children[i].boundary)) result.push(...this.children[i].objects);
     }
-
-    return result.length ? [...new Set(result)] : result;
+    return result;
   }
 
   intersects(boundary1, boundary2) {
@@ -89,22 +95,41 @@ export default class BozoQuadtree {
   }
 
   clearTree() {
+    this.allObjects = [];
+
     this.objects = [];
 
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].clearTree();
+      if (this.children[i]) this.children[i].clearTree();
     }
 
     this.children = [];
   }
 
+  // restructure() {
+  //   for (let i = 0; i < this.children.length; i++) {
+  //     let child = this.children[i];
+  //     if (!child || (!child.children.length && !child.objects.length)) {
+  //       this.children.splice(i, 1);
+  //       continue;
+  //     }
+  //     child.restructure();
+  //   }
+  // }
+
+  remove(object) {
+    object.tree.objects.splice(object.tree.objects.findIndex(v => v.object == object.object), 1);
+    this.allObjects.splice(this.allObjects.findIndex(v => v.object == object.object), 1);
+  }
+
+  relocate(object) {
+    object.relocate = true;
+    object.tree.objects.splice(object.tree.objects.findIndex(v => v.object == object.object), 1);
+    // this.restructure();
+    this.insert(object);
+  }
+
   array() {
-    let result = [];
-    if (this.objects.length) result.push(...this.objects);
-    for (let i = 0; i < this.children.length; i++) {
-      result.push(...this.children[i].array());
-    }
-    // credit: https://stackoverflow.com/questions/9229645/remove-duplicate-values-from-js-array
-    return result.length ? [...new Set(result)] : result;
+    return [...this.allObjects];
   }
 }

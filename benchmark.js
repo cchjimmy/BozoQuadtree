@@ -42,7 +42,7 @@ function init() {
 
   var start = performance.now();
 
-  for (let i = 0; i < amount; i++) {
+  for (let i = 0; i < objects.length; i++) {
     qtree.insert(objects[i]);
   }
 
@@ -53,7 +53,7 @@ function init() {
 
   let total = qtree.array().length;
 
-  var text = `Time spent for insert of ${amount} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
+  var text = `Time spent for insert of ${total} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
   console.log(`retrieved ${candidates.length} objects in ${time}ms`, qtree);
   let d = document.createElement('div');
   d.innerHTML = text;
@@ -87,7 +87,7 @@ function init() {
     if (!node.children.length) return;
     let c = node.children;
     for (let i = 0; i < c.length; i++) {
-      drawQuadtree(c[i], ctx);
+      if (c[i]) drawQuadtree(c[i], ctx);
     }
   }
 
@@ -97,17 +97,15 @@ function init() {
     if (!node.children.length) return;
     let c = node.children;
     for (let i = 0; i < c.length; i++) {
-      drawIntersectedBoundaries(c[i], boundary, ctx);
+      if (c[i]) drawIntersectedBoundaries(c[i], boundary, ctx);
     }
   }
 
   function drawObjects(node, ctx) {
     let o = node.array();
     for (let i = 0; i < o.length; i++) {
-      ctx.save();
       if (o[i].check) continue;
-      strokeRectangle(o[i], ctx);
-      ctx.restore();
+      strokeRectangle(o[i].object, ctx);
     }
   }
 
