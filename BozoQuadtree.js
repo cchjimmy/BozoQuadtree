@@ -66,8 +66,8 @@ export default class BozoQuadtree {
     ];
   }
 
-  getTreesContaining(boundary) {
-    let tree = [this];
+  getTreeContaining(boundary) {
+    let tree = this;
     if (this.depth >= this.maxDepth) return tree;
     for (let i = 0; i < this.childBoundaries.length; i++) {
       if (!this.contains(this.childBoundaries[i], boundary)) continue;
@@ -76,7 +76,7 @@ export default class BozoQuadtree {
         this.children[i].allObjects = this.allObjects;
         this.children[i].depth = this.depth + 1;
       }
-      tree.push(...this.children[i].getTreesContaining(boundary));
+      tree = this.children[i].getTreeContaining(boundary);
       break;
     }
     return tree;
@@ -88,7 +88,7 @@ export default class BozoQuadtree {
    * @returns 
    */
   insert(boundary) {
-    let tree = this.getTreesContaining(boundary).pop();
+    let tree = this.getTreeContaining(boundary);
     let object = {
       boundary, // the object itself
       tree // tree containing object
@@ -103,7 +103,7 @@ export default class BozoQuadtree {
    * @returns 
    */
   relocate(quadtreeObject) {
-    let tree = this.getTreesContaining(quadtreeObject.boundary).pop();
+    let tree = this.getTreeContaining(quadtreeObject.boundary);
     // if tree is the same as the tree in the quadtreeobject, return
     if (tree == quadtreeObject.tree) return;
     // otherwise move the object to tree
