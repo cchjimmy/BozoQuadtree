@@ -54,7 +54,7 @@ function init() {
   let total = qtree.array().length;
 
   var text = `Time spent for insert of ${total} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
-  console.log(`retrieved ${candidates.length} objects in ${time}ms`, qtree);
+  console.log(`retrieved ${candidates.length} objects in ${time}ms`);
   let d = document.createElement('div');
   d.innerHTML = text;
   document.body.appendChild(d);
@@ -105,7 +105,7 @@ function init() {
     let o = node.array();
     for (let i = 0; i < o.length; i++) {
       if (o[i].check) continue;
-      strokeRectangle(o[i].object, ctx);
+      strokeRectangle(o[i].boundary, ctx);
     }
   }
 

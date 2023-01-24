@@ -72,26 +72,25 @@ function draw() {
     ...qtree.queryRange(bottom)
   ];
   for (let i = 0; i < edges.length; i++) {
-    let e = edges[i].object;
+    let e = edges[i].boundary;
     if (e.x + e.w * 0.5 > canvas.width || e.x - e.w * 0.5 < 0) e.vx *= -1;
     if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
   }
 
   let all = qtree.array();
   for (let i = 0; i < all.length; i++) {
-    all[i].object.x += all[i].object.vx * dt;
-    all[i].object.y += all[i].object.vy * dt;
+    all[i].boundary.x += all[i].boundary.vx * dt;
+    all[i].boundary.y += all[i].boundary.vy * dt;
+
     qtree.relocate(all[i]);
   }
 
   let inRange = qtree.queryRange(mouseBoundary);
   for (let i = 0; i < inRange.length; i++) {
-    let e = inRange[i].object;
+    let e = inRange[i].boundary;
     if ((e.y - mouseBoundary.y) ** 2 + (e.x - mouseBoundary.x) ** 2 > (mouseBoundary.w * 0.5) ** 2) continue;
     strokeRectangle(e);
   }
-
-  // console.log('all:', all.length, ', edges:', edges.length, ', inRange:', inRange.length)
 
   fps.innerText = Math.round(1 / dt);
   last = now;

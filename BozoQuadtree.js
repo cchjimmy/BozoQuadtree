@@ -66,48 +66,56 @@ export default class BozoQuadtree {
     ];
   }
 
+  getTreesContaining(boundary) {
+    let tree = [this];
+    if (this.depth >= this.maxDepth) return tree;
+    for (let i = 0; i < this.childBoundaries.length; i++) {
+      if (!this.contains(this.childBoundaries[i], boundary)) continue;
+      if (!this.children[i]) {
+        this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
+        this.children[i].allObjects = this.allObjects;
+        this.children[i].depth = this.depth + 1;
+      }
+      tree.push(...this.children[i].getTreesContaining(boundary));
+      break;
+    }
+    return tree;
+  }
+
   /**
    * specify a boundary to be inserted into the quadtree
    * @param {boundary} boundary 
    * @returns 
    */
   insert(boundary) {
-    if (this.depth < this.maxDepth) {
-      for (let i = 0; i < this.childBoundaries.length; i++) {
-        if (!this.contains(this.childBoundaries[i], boundary.object ?? boundary)) continue;
-        if (!this.children[i]) {
-          this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
-          this.children[i].allObjects = this.allObjects;
-          this.children[i].depth = this.depth + 1;
-        }
-        this.children[i].insert(boundary);
-        return;
-      }
-    }
-
-    // if boundary.tree is defined, this means this object has been added to the tree before
-    if (boundary.tree) {
-      // if the tree is the same, no need to move the object
-      if (boundary.tree == this) return;
-      // otherwise move the object to this tree
-      this.objects.push(boundary);
-      // remove it from the old tree
-      for (let i = 0; i < boundary.tree.objects.length; i++) {
-        if (boundary.tree.objects[i].object != boundary.object) continue;
-        boundary.tree.objects.splice(i, 1);
-        break;
-      }
-      // change the tree parameter to this tree
-      boundary.tree = this;
-      return;
-    }
-    // if the object has not been added before, instantiate an object with object and tree parameters
+    let tree = this.getTreesContaining(boundary).pop();
     let object = {
-      object: boundary, // the object itself
-      tree: this // this tree
+      boundary, // the object itself
+      tree // tree containing object
     }
-    this.objects.push(object);
+    tree.objects.push(object);
     this.allObjects.push(object);
+  }
+
+  /**
+   * 
+   * @param {quadtreeObject} quadtreeObject 
+   * @returns 
+   */
+  relocate(quadtreeObject) {
+    let tree = this.getTreesContaining(quadtreeObject.boundary).pop();
+    // if tree is the same as the tree in the quadtreeobject, return
+    if (tree == quadtreeObject.tree) return;
+    // otherwise move the object to tree
+    tree.objects.push(quadtreeObject);
+    // remove it from the old tree
+    for (let i = 0; i < quadtreeObject.tree.objects.length; i++) {
+      if (quadtreeObject.tree.objects[i] != quadtreeObject) continue;
+      quadtreeObject.tree.objects.splice(i, 1);
+      break;
+    }
+    // change the tree parameter to tree
+    quadtreeObject.tree = tree;
   }
 
   /**
@@ -118,18 +126,15 @@ export default class BozoQuadtree {
   queryRange(boundary) {
     let result = [];
     for (let i = 0; i < this.children.length; i++) {
-      if (!this.children[i]) continue;
-      if (this.intersects(this.children[i].boundary, boundary)) {
-        result.push(...this.children[i].queryRange(boundary));
-        continue;
-      }
+      if (!this.children[i]) continue; // accounts for empty child
+      if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
     }
     if (this.contains(boundary, this.boundary)) {
       result.push(...this.objects);
       return result;
     }
     for (let i = 0; i < this.objects.length; i++) {
-      if (this.intersects(boundary, this.objects[i].object)) result.push(this.objects[i]);
+      if (this.intersects(boundary, this.objects[i].boundary)) result.push(this.objects[i]);
     }
     return result;
   }
@@ -165,7 +170,7 @@ export default class BozoQuadtree {
     this.objects = [];
 
     for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i]) this.children[i].clearTree();
+      this.children[i]?.clearTree();
     }
 
     this.children = [];
@@ -173,12 +178,7 @@ export default class BozoQuadtree {
 
   // restructure() {
   //   for (let i = 0; i < this.children.length; i++) {
-  //     let child = this.children[i];
-  //     if (!child || (!child.children.length && !child.objects.length)) {
-  //       this.children.splice(i, 1);
-  //       continue;
-  //     }
-  //     child.restructure();
+
   //   }
   // }
 
@@ -188,27 +188,19 @@ export default class BozoQuadtree {
    */
   remove(object) {
     for (let i = 0; i < object.tree.objects.length; i++) {
-      if (object.tree.objects[i].object != object.object) continue;
+      if (object.tree.objects[i] != object) continue;
       object.tree.objects.splice(i, 1);
       break;
     }
     for (let i = 0; i < this.allObjects.length; i++) {
-      if (this.allObjects[i].object != object.object) continue;
+      if (this.allObjects[i] != object) continue;
       this.allObjects.splice(i, 1);
-      break;
+    break;
     }
   }
 
   /**
-   * 
-   * @param {quadtreeObject} object 
-   */
-  relocate(object) {
-    this.insert(object);
-  }
-
-  /**
-   * 
+   *   
    * @returns {...quadtreeObject} an array of objects with keys: object, tree
    */
   array() {
