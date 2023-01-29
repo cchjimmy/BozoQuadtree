@@ -12,7 +12,7 @@
 /**
  * objects stored in the quadtree
  * @typedef quadtreeObject
- * @property {boundary} object
+ * @property {boundary} boundary
  * @property {BozoQuadtree} tree
  */
 
@@ -67,8 +67,8 @@ export default class BozoQuadtree {
   }
 
   getTreeContaining(boundary) {
-    let tree = this;
-    if (this.depth >= this.maxDepth) return tree;
+    // max depth achieved, return this tree
+    if (this.depth >= this.maxDepth) return this;
     for (let i = 0; i < this.childBoundaries.length; i++) {
       if (!this.contains(this.childBoundaries[i], boundary)) continue;
       if (!this.children[i]) {
@@ -76,10 +76,11 @@ export default class BozoQuadtree {
         this.children[i].allObjects = this.allObjects;
         this.children[i].depth = this.depth + 1;
       }
-      tree = this.children[i].getTreeContaining(boundary);
-      break;
+      // child tree contains the object, call this function on child
+      return this.children[i].getTreeContaining(boundary);
     }
-    return tree;
+    // if no children contain boundary, return this tree
+    return this;
   }
 
   /**

@@ -102,13 +102,3 @@ function random(min, max) { return Math.random() * (max - min) + min };
 function strokeRectangle(boundary) {
   ctx.strokeRect(Math.floor(boundary.x - boundary.w * 0.5), Math.floor(boundary.y - boundary.h * 0.5), boundary.w, boundary.h);
 }
-
-function drawQuadtree(node) {
-  let b = node.boundary;
-  strokeRectangle(b);
-  if (!node.children.length) return;
-  let c = node.children;
-  for (let i = 0; i < c.length; i++) {
-    if (c[i]) drawQuadtree(c[i]);
-  }
-}
