@@ -158,8 +158,7 @@ export default class BozoQuadtree {
    * @returns true only if boundary1 contains all of boundary2
    */
   contains(boundary1, boundary2) {
-    if (boundary1.w * boundary1.h < boundary2.w * boundary2.h) return false;
-    return boundary1.x - boundary2.x < (boundary1.w - boundary2.w) * 0.5 && boundary1.x - boundary2.x > (boundary2.w - boundary1.w) * 0.5 && boundary1.y - boundary2.y < (boundary1.h - boundary2.h) * 0.5 && boundary1.y - boundary2.y > (boundary2.h - boundary1.h) * 0.5
+    return (boundary1.x - boundary2.x)**2 < ((boundary1.w - boundary2.w) * 0.5)**2 && (boundary1.y - boundary2.y)**2 < ((boundary1.h - boundary2.h) * 0.5)**2
   }
 
   /**
