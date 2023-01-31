@@ -2,7 +2,7 @@
 
 import BozoQuadtree from './BozoQuadtree.js';
 
-const canvas = document.createElement('canvas');
+const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 const qtree = new BozoQuadtree;
 const objects = [];
@@ -12,8 +12,6 @@ const maxObjectSize = 64;
 init();
 
 function init() {
-  document.body.appendChild(canvas);
-
   canvas.width = 800;
   canvas.height = 600;
 
@@ -51,7 +49,7 @@ function init() {
   var end = performance.now();
   var time = end - start;
 
-  let total = qtree.array().length;
+  let total = qtree.array.length;
 
   var text = `Time spent for insert of ${total} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
   console.log(`retrieved ${candidates.length} objects in ${time}ms`);
@@ -102,7 +100,7 @@ function init() {
   }
 
   function drawObjects(node, ctx) {
-    let o = node.array();
+    let o = node.array;
     for (let i = 0; i < o.length; i++) {
       if (o[i].check) continue;
       strokeRectangle(o[i].boundary, ctx);

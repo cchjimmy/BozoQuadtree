@@ -1,7 +1,7 @@
 import BozoQuadtree from "./BozoQuadtree.js";
 
 const qtree = new BozoQuadtree;
-const canvas = document.createElement('canvas');
+const canvas = document.querySelector('canvas');
 canvas.width = 400;
 canvas.height = 400;
 const ctx = canvas.getContext('2d');
@@ -26,8 +26,6 @@ init();
 draw();
 
 function init() {
-  document.body.appendChild(canvas);
-
   qtree.setBounds({
     x: canvas.width * 0.5,
     y: canvas.height * 0.5,
@@ -77,7 +75,7 @@ function draw() {
     if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
   }
 
-  let all = qtree.array();
+  let all = qtree.array;
   for (let i = 0; i < all.length; i++) {
     all[i].boundary.x += all[i].boundary.vx * dt;
     all[i].boundary.y += all[i].boundary.vy * dt;

@@ -130,10 +130,6 @@ export default class BozoQuadtree {
       if (!this.children[i]) continue; // accounts for empty child
       if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
     }
-    if (this.contains(boundary, this.boundary)) {
-      result.push(...this.objects);
-      return result;
-    }
     for (let i = 0; i < this.objects.length; i++) {
       if (this.intersects(boundary, this.objects[i].boundary)) result.push(this.objects[i]);
     }
@@ -155,10 +151,10 @@ export default class BozoQuadtree {
    * 
    * @param {boundary} boundary1 
    * @param {boundary} boundary2 
-   * @returns true only if boundary1 contains all of boundary2
+   * @returns true if boundary1 contains all of boundary2 or vice versa
    */
   contains(boundary1, boundary2) {
-    return (boundary1.x - boundary2.x)**2 < ((boundary1.w - boundary2.w) * 0.5)**2 && (boundary1.y - boundary2.y)**2 < ((boundary1.h - boundary2.h) * 0.5)**2
+    return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w - boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h - boundary2.h) * 0.5) ** 2;
   }
 
   /**
@@ -195,15 +191,15 @@ export default class BozoQuadtree {
     for (let i = 0; i < this.allObjects.length; i++) {
       if (this.allObjects[i] != object) continue;
       this.allObjects.splice(i, 1);
-    break;
+      break;
     }
   }
 
   /**
    *   
-   * @returns {...quadtreeObject} an array of objects with keys: object, tree
+   * @returns {...quadtreeObject} All quadtreeObjects contained in this tree
    */
-  array() {
-    return [...this.allObjects];
+  get array() {
+    return this.allObjects;
   }
 }
