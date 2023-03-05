@@ -3,17 +3,13 @@ import BozoQuadtree from "./BozoQuadtree.js";
 init();
 
 function init() {
-  const qtree = new BozoQuadtree({
-    x: canvas.width * 0.5,
-    y: canvas.height * 0.5,
-    w: canvas.width,
-    h: canvas.height
-  });
   const canvas = document.querySelector('canvas');
   const ctx = canvas.getContext('2d');
 
   canvas.width = 400;
   canvas.height = 400;
+  
+  const qtree = new BozoQuadtree();
 
   let b0 = {
     x: 100,
@@ -39,11 +35,6 @@ function init() {
     w: 50,
     h: 50
   };
-
-  qtree.insert(b0);
-  qtree.insert(b1);
-  qtree.insert(b2);
-  qtree.insert(b3);
 
   // draw
   strokeRectangle(ctx, b0, 'b0');

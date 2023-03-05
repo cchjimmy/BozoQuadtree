@@ -2,16 +2,16 @@
 
 import BozoQuadtree from './BozoQuadtree.js';
 
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
-const qtree = new BozoQuadtree;
-const objects = [];
-const amount = 10000;
-const maxObjectSize = 64;
-
 init();
 
 function init() {
+  const canvas = document.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  const qtree = new BozoQuadtree;
+  const objects = [];
+  const amount = 10000;
+  const maxObjectSize = 64;
+  
   canvas.width = 800;
   canvas.height = 600;
 
@@ -43,6 +43,12 @@ function init() {
   for (let i = 0; i < objects.length; i++) {
     qtree.insert(objects[i]);
   }
+  
+  qtree.clearTree();
+  
+  for (let i = 0; i < objects.length; i++) {
+    qtree.insert(objects[i]);
+  }
 
   var candidates = qtree.queryRange(cursor);
 
@@ -51,7 +57,7 @@ function init() {
 
   let total = qtree.array.length;
 
-  var text = `Time spent for insert of ${total} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
+  var text = `Time spent for insertion, remove and re-insertion of ${total} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
   console.log(`retrieved ${candidates.length} objects in ${time}ms`);
   let d = document.createElement('div');
   d.innerHTML = text;
