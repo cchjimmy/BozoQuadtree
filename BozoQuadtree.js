@@ -10,13 +10,6 @@
  */
 
 /**
- * objects stored in the quadtree
- * @typedef quadtreeObject
- * @property {boundary} boundary
- * @property {BozoQuadtree} tree
- */
-
-/**
  * all boundaries have their origins at the center
  */
 export default class BozoQuadtree {
@@ -92,39 +85,13 @@ export default class BozoQuadtree {
   }
 
   /**
-   * specify a boundary to be inserted into the quadtree
+   * specify an object with rectangular boundary to be inserted into the quadtree
    * @param {boundary} boundary 
    * @returns 
    */
   insert(boundary) {
-    let tree = this.getTreeContaining(boundary);
-    let payload = {
-      boundary, // the object itself
-      tree // tree containing object
-    }
-    tree.objects.push(payload);
-    this.allObjects.push(payload);
-  }
-
-  /**
-   * 
-   * @param {quadtreeObject} quadtreeObject 
-   * @returns 
-   */
-  relocate(quadtreeObject) {
-    let tree = this.getTreeContaining(quadtreeObject.boundary);
-    // if tree is the same as the tree in the quadtreeobject, return
-    if (tree == quadtreeObject.tree) return;
-    // otherwise move the object to tree
-    tree.objects.push(quadtreeObject);
-    // remove it from the old tree
-    for (let i = 0; i < quadtreeObject.tree.objects.length; i++) {
-      if (quadtreeObject.tree.objects[i] != quadtreeObject) continue;
-      quadtreeObject.tree.objects.splice(i, 1);
-      break;
-    }
-    // change the tree parameter to tree
-    quadtreeObject.tree = tree;
+    this.getTreeContaining(boundary).objects.push(boundary);
+    this.allObjects.push(boundary);
   }
 
   /**
@@ -134,12 +101,12 @@ export default class BozoQuadtree {
    */
   queryRange(boundary) {
     let result = [];
+    for (let i = 0; i < this.objects.length; i++) {
+      if (this.intersects(boundary, this.objects[i])) result.push(this.objects[i]);
+    }
     for (let i = 0; i < this.children.length; i++) {
       if (!this.children[i]) continue; // accounts for empty child
-      if (this.intersects(this.children[i].boundary, boundary)) result.push(...this.children[i].queryRange(boundary));
-    }
-    for (let i = 0; i < this.objects.length; i++) {
-      if (this.intersects(boundary, this.objects[i].boundary)) result.push(this.objects[i]);
+      if (this.intersects(boundary, this.children[i].boundary)) result.push(...this.children[i].queryRange(boundary));
     }
     return result;
   }
@@ -159,9 +126,10 @@ export default class BozoQuadtree {
    * 
    * @param {boundary} boundary1 
    * @param {boundary} boundary2 
-   * @returns true if boundary1 contains all of boundary2 or vice versa
+   * @returns true only if boundary1 contains all of boundary2
    */
   contains(boundary1, boundary2) {
+    if (boundary1.w * boundary1.h < boundary2.w * boundary2.h) return false;
     return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w - boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h - boundary2.h) * 0.5) ** 2;
   }
 
@@ -179,40 +147,48 @@ export default class BozoQuadtree {
     this.children.splice(0);
   }
 
-  // restructure() {
-  //   for (let i = 0; i < this.children.length; i++) {
-
-  //   }
-  // }
-
   /**
    * 
-   * @param {quadtreeObject} object 
+   * @param {boundary} boundary
    */
-  remove(object) {
-    for (let i = 0; i < object.tree.objects.length; i++) {
-      if (object.tree.objects[i] != object) continue;
-      object.tree.objects.splice(i, 1);
-      break;
+  remove(boundary) {
+    let tree = this.getTreeContaining(boundary);
+    let removed = [];
+    for(let i = 0; i < tree.objects.length; i++){
+      if(!this.intersects(boundary, tree.objects[i])) continue;
+      removed.push(...tree.objects.splice(i, 1));
     }
-    this.allObjects.splice(0);
-    this.allObjects.push(...this.getAll());
+    if (tree.children.length) {
+      for (let i = 0; i< tree.children.length; i++) {
+        removed.push(...tree.children[i].remove(boundary));
+      }
+    }
+    let all = this.array;
+    for (let i = 0; i < all.length; i++) {
+      for (let j = 0; j < removed.length; j++) {
+        if (all[i] !== removed[j]) continue;
+        all.splice(i, 1);
+        removed.splice(j, 1);
+        i--;
+        break;
+      }
+    }
+    return removed;
   }
 
   /**
    *   
-   * @returns {...quadtreeObject} All quadtreeObjects contained in this tree
+   * @returns {...boundary} All objects contained in this tree
    */
   get array() {
     return this.allObjects;
   }
   
-  getAll() {
-    let result = [];
-    result.push(...this.objects);
-    for (let i = 0; i < this.children.length; i++) {
-      result.push(this.children[i]?.updateAllObjects());
+  update() {
+    let all = [...this.array];
+    this.clearTree();
+    for (let i = 0; i < all.length; i++) {
+      this.insert(all[i]);
     }
-    return result;
   }
 }

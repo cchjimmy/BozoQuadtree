@@ -40,17 +40,17 @@ function init() {
       w: random(5, 10),
       h: random(5, 10),
       vx: random(-20, 20),
-      vy: random(-20, 20)
+      vy: random(-20, 20),
     });
   }
 
   // mouse support
-  document.addEventListener('mousemove', changeMouseBoundary);
+  document.addEventListener('mousemove', updateMouseBoundary);
 
   // touch support
-  document.addEventListener('touchmove', changeMouseBoundary);
+  document.addEventListener('touchmove', updateMouseBoundary);
 
-  function changeMouseBoundary(e) {
+  function updateMouseBoundary(e) {
     let bcr = canvas.getBoundingClientRect();
     mouseBoundary.x = (e.clientX ?? e.touches[0].clientX) - bcr.x;
     mouseBoundary.y = (e.clientY ?? e.touches[0].clientY) - bcr.y;
@@ -62,6 +62,7 @@ function draw() {
   let dt = (now - last) / 1000;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  qtree.update();
 
   let edges = [
     ...qtree.queryRange(top),
@@ -70,26 +71,25 @@ function draw() {
     ...qtree.queryRange(bottom)
   ];
   for (let i = 0; i < edges.length; i++) {
-    let e = edges[i].boundary;
+    let e = edges[i];
     if (e.x + e.w * 0.5 > canvas.width || e.x - e.w * 0.5 < 0) e.vx *= -1;
     if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
   }
 
   let all = qtree.array;
   for (let i = 0; i < all.length; i++) {
-    all[i].boundary.x += all[i].boundary.vx * dt;
-    all[i].boundary.y += all[i].boundary.vy * dt;
-
-    qtree.relocate(all[i]);
+    all[i].x += all[i].vx * dt;
+    all[i].y += all[i].vy * dt;
   }
 
   let inRange = qtree.queryRange(mouseBoundary);
   for (let i = 0; i < inRange.length; i++) {
-    let e = inRange[i].boundary;
-    if ((e.y - mouseBoundary.y) ** 2 + (e.x - mouseBoundary.x) ** 2 > (mouseBoundary.w * 0.5) ** 2) continue;
-    strokeRectangle(e);
+    if ((inRange[i].y - mouseBoundary.y) ** 2 + (inRange[i].x - mouseBoundary.x) ** 2 <= (mouseBoundary.w * 0.5) ** 2) continue;
+    inRange.splice(i, 1);
+    i--;
   }
-
+  strokeRectangles(inRange, ctx);
+  
   fps.innerText = Math.round(1 / dt);
   last = now;
   requestAnimationFrame(draw);
@@ -97,6 +97,24 @@ function draw() {
 
 function random(min, max) { return Math.random() * (max - min) + min };
 
-function strokeRectangle(boundary) {
-  ctx.strokeRect(Math.floor(boundary.x - boundary.w * 0.5), Math.floor(boundary.y - boundary.h * 0.5), boundary.w, boundary.h);
+function strokeRectangles(boundaries, ctx) {
+  ctx.beginPath();
+  for (let i = 0; i < boundaries.length; i++) {
+    let b = boundaries[i];
+    ctx.moveTo(b.x - b.w * 0.5, b.y - b.h * 0.5);
+    ctx.lineTo(b.x + b.w * 0.5, b.y - b.h * 0.5);
+    ctx.lineTo(b.x + b.w * 0.5, b.y + b.h * 0.5);
+    ctx.lineTo(b.x - b.w * 0.5, b.y + b.h * 0.5);
+    ctx.lineTo(b.x - b.w * 0.5, b.y - b.h * 0.5);
+  }
+  ctx.stroke();
+}
+
+function fillRectangle(boundary, color, ctx) {
+  ctx.fillStyle = color;
+  ctx.fillRect(boundary.x, boundary.y, boundary.w, boundary.h);
+}
+
+function randomColor() {
+  return `rgb(${random(0, 255)}, ${random(0, 255)}, ${random(0, 255)})`;
 }

@@ -43,12 +43,6 @@ function init() {
   for (let i = 0; i < objects.length; i++) {
     qtree.insert(objects[i]);
   }
-  
-  qtree.clearTree();
-  
-  for (let i = 0; i < objects.length; i++) {
-    qtree.insert(objects[i]);
-  }
 
   var candidates = qtree.queryRange(cursor);
 
@@ -57,8 +51,8 @@ function init() {
 
   let total = qtree.array.length;
 
-  var text = `Time spent for insertion, remove and re-insertion of ${total} objects and retrieve once: ${Math.round(time)}ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100}%) objects.`;
-  console.log(`retrieved ${candidates.length} objects in ${time}ms`);
+  var text = `Time spent for insertion of ${total} objects and retrieve once: ${Math.round(time)} ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100} %) objects.`;
+  console.log(`retrieved ${candidates.length} objects in ${time} ms`);
   let d = document.createElement('div');
   d.innerHTML = text;
   document.body.appendChild(d);
@@ -109,7 +103,7 @@ function init() {
     let o = node.array;
     for (let i = 0; i < o.length; i++) {
       if (o[i].check) continue;
-      strokeRectangle(o[i].boundary, ctx);
+      strokeRectangle(o[i], ctx);
     }
   }
 
