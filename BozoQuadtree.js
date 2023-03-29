@@ -160,19 +160,11 @@ export default class BozoQuadtree {
     }
     if (tree.children.length) {
       for (let i = 0; i< tree.children.length; i++) {
-        removed.push(...tree.children[i].remove(boundary));
+        if (this.children[i]) removed.push(...tree.children[i].remove(boundary));
       }
     }
-    let all = this.array;
-    for (let i = 0; i < all.length; i++) {
-      for (let j = 0; j < removed.length; j++) {
-        if (all[i] !== removed[j]) continue;
-        all.splice(i, 1);
-        removed.splice(j, 1);
-        i--;
-        break;
-      }
-    }
+    this.allObjects.splice(0);
+    this.allObjects.push(...this.getAll());
     return removed;
   }
 
@@ -190,5 +182,14 @@ export default class BozoQuadtree {
     for (let i = 0; i < all.length; i++) {
       this.insert(all[i]);
     }
+  }
+  
+  getAll() {
+    let all = [];
+    all.push(...this.objects);
+    for (let i = 0; i < this.children.length; i++) {
+      if (this.children[i]) all.push(...this.children[i].getAll())
+    }
+    return all;
   }
 }
