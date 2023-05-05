@@ -13,23 +13,26 @@
  * all boundaries have their origins at the center
  */
 export default class BozoQuadtree {
+  #allObjects;
   constructor(boundary = { x: 50, y: 50, w: 100, h: 100 }, maxDepth = 4) {
     this.objects = [];
-    this.children = [];
+    this.children = new Array(4);
     this.maxDepth = maxDepth;
     this.depth = 0;
     this.boundary = {};
-    this.childBoundaries = [];
-    this.allObjects = [];
+    this.childBoundaries = new Array(4);
+    this.#allObjects = new Map();
+    this.parent = null;
+    this.index = null;
     
-    this.setBounds(boundary);
+    this.setBound(boundary);
   }
 
   /**
    * 
    * @param {boundary} boundary 
    */
-  setBounds(boundary) {
+  setBound(boundary) {
     this.clearTree();
     this.boundary.x = boundary.x;
     this.boundary.y = boundary.y;
@@ -71,11 +74,12 @@ export default class BozoQuadtree {
     if (this.depth >= this.maxDepth) return this;
     
     for (let i = 0; i < this.childBoundaries.length; i++) {
-      if (!this.contains(this.childBoundaries[i], object)) continue;
+      if (!this.#contain(this.childBoundaries[i], object)) continue;
       if (!this.children[i]) {
         this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
-        // this.children[i].allObjects = this.allObjects;
         this.children[i].depth = this.depth + 1;
+        this.children[i].parent = this;
+        this.children[i].index = i;
       }
       // child tree contains the object, call this function on child
       return this.children[i].getTreeContaining(object);
@@ -90,8 +94,9 @@ export default class BozoQuadtree {
    * @returns 
    */
   insert(boundary) {
-    this.getTreeContaining(boundary).objects.push(boundary);
-    this.allObjects.push(boundary);
+    let tree = this.getTreeContaining(boundary);
+    tree.objects.push(boundary);
+    this.#allObjects.set(boundary, tree);
   }
 
   /**
@@ -102,11 +107,11 @@ export default class BozoQuadtree {
   queryRange(boundary) {
     let result = [];
     for (let i = 0; i < this.objects.length; i++) {
-      if (this.intersects(boundary, this.objects[i])) result.push(this.objects[i]);
+      if (this.#intersect(boundary, this.objects[i])) result.push(this.objects[i]);
     }
     for (let i = 0; i < this.children.length; i++) {
       if (!this.children[i]) continue; // accounts for empty child
-      if (this.intersects(boundary, this.children[i].boundary)) result.push(...this.children[i].queryRange(boundary));
+      if (this.#intersect(boundary, this.children[i].boundary)) result.push(...this.children[i].queryRange(boundary));
     }
     return result;
   }
@@ -115,9 +120,9 @@ export default class BozoQuadtree {
    * 
    * @param {boundary} boundary1 
    * @param {boundary} boundary2 
-   * @returns true if boundary1 overlaps or contains boundary2 or vice versa
+   * @returns true if boundary1 intersects or contains boundary2 or vice versa
    */
-  intersects(boundary1, boundary2) {
+  #intersect(boundary1, boundary2) {
     // squaring is for eliminating negative values
     return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w + boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h + boundary2.h) * 0.5) ** 2;
   }
@@ -128,8 +133,8 @@ export default class BozoQuadtree {
    * @param {boundary} boundary2 
    * @returns true only if boundary1 contains all of boundary2
    */
-  contains(boundary1, boundary2) {
-    if (boundary1.w * boundary1.h < boundary2.w * boundary2.h) return false;
+  #contain(boundary1, boundary2) {
+    if (boundary1.w * boundary1.h <= boundary2.w * boundary2.h) return false;
     return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w - boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h - boundary2.h) * 0.5) ** 2;
   }
 
@@ -137,14 +142,14 @@ export default class BozoQuadtree {
    * recurssively clear the tree of its objects and children
    */
   clearTree() {
-    this.objects.splice(0);
-    this.allObjects.splice(0);
-    
     for (let i = 0; i < this.children.length; i++) {
       this.children[i]?.clearTree();
     }
     
+    this.#allObjects.clear();
+    this.objects.splice(0);
     this.children.splice(0);
+    this.parent = null;
   }
 
   /**
@@ -153,42 +158,33 @@ export default class BozoQuadtree {
    */
   remove(boundary) {
     let tree = this.getTreeContaining(boundary);
-    let removed = [];
     for(let i = 0; i < tree.objects.length; i++){
-      if(!this.intersects(boundary, tree.objects[i])) continue;
-      removed.push(...tree.objects.splice(i, 1));
+      if(!this.#intersect(boundary, tree.objects[i])) continue;
+      tree.objects.splice(i, 1);
+      this.#allObjects.delete(tree.objects[i]);
     }
-    if (tree.children.length) {
-      for (let i = 0; i< tree.children.length; i++) {
-        if (this.children[i]) removed.push(...tree.children[i].remove(boundary));
-      }
-    }
-    this.allObjects.splice(0);
-    this.allObjects.push(...this.getAll());
-    return removed;
-  }
-
-  /**
-   *   
-   * @returns {...boundary} All objects contained in this tree
-   */
-  get array() {
-    return this.allObjects;
-  }
-  
-  update() {
-    let all = [...this.array];
-    this.clearTree();
-    for (let i = 0; i < all.length; i++) {
-      this.insert(all[i]);
+    for (let i = 0; i < tree.children.length; i++) {
+      if (!tree.children[i] || !this.#intersect(boundary, tree.children[i].boundary)) continue;
+      tree.children[i].remove(boundary);
     }
   }
   
-  getAll() {
+  relocate(object) {
+    let tree = this.#allObjects.get(object);
+    if (!tree) return;
+    let tree1 = this.getTreeContaining(object);
+    if (tree == tree1) return;
+    this.#allObjects.set(object, tree1);
+    tree1.objects.push(object);
+    tree.objects.splice(tree.objects.indexOf(object), 1);
+  }
+  
+  array(bruteForce = false) {
+    if (!bruteForce) return Array.from(this.#allObjects.keys());
     let all = [];
     all.push(...this.objects);
     for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i]) all.push(...this.children[i].getAll())
+      if (this.children[i]) all.push(...this.children[i].getAll(bruteForce))
     }
     return all;
   }

@@ -9,8 +9,8 @@ const fps = document.querySelector('span');
 var last = 0;
 const numberOfObjects = 10000;
 var mouseBoundary = {
-  x: 0,
-  y: 0,
+  x: 200,
+  y: 200,
   w: 200,
   h: 200,
 }
@@ -23,10 +23,11 @@ const right = { x: canvas.width, y: canvas.height * 0.5, w: thickness, h: canvas
 const bottom = { x: canvas.width * 0.5, y: canvas.height, w: canvas.width, h: thickness };
 
 init();
-draw();
 
 function init() {
-  qtree.setBounds({
+  ctx.strokeStyle = "white";
+  
+  qtree.setBound({
     x: canvas.width * 0.5,
     y: canvas.height * 0.5,
     w: canvas.width,
@@ -43,6 +44,8 @@ function init() {
       vy: random(-20, 20),
     });
   }
+  
+  draw();
 
   // mouse support
   document.addEventListener('mousemove', updateMouseBoundary);
@@ -62,7 +65,6 @@ function draw() {
   let dt = (now - last) / 1000;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  qtree.update();
 
   let edges = [
     ...qtree.queryRange(top),
@@ -76,10 +78,11 @@ function draw() {
     if (e.y + e.h * 0.5 > canvas.height || e.y - e.h * 0.5 < 0) e.vy *= -1;
   }
 
-  let all = qtree.array;
+  let all = qtree.array();
   for (let i = 0; i < all.length; i++) {
     all[i].x += all[i].vx * dt;
     all[i].y += all[i].vy * dt;
+    qtree.relocate(all[i]);
   }
 
   let inRange = qtree.queryRange(mouseBoundary);
@@ -89,6 +92,8 @@ function draw() {
     i--;
   }
   strokeRectangles(inRange, ctx);
+  
+  // strokeTree(qtree, ctx);
   
   fps.innerText = Math.round(1 / dt);
   last = now;
@@ -110,9 +115,20 @@ function strokeRectangles(boundaries, ctx) {
   ctx.stroke();
 }
 
+function strokeTree(tree, ctx) {
+  ctx.beginPath();
+  let b = tree.boundary;
+  ctx.strokeRect(b.x - b.w * 0.5, b.y - b.h * 0.5, b.w, b.h);
+  for (let i = 0; i < tree.children.length; i++) {
+    if (tree.children[i]) strokeTree(tree.children[i], ctx);
+  }
+}
+
 function fillRectangle(boundary, color, ctx) {
+  let old = ctx.fillStyle;
   ctx.fillStyle = color;
   ctx.fillRect(boundary.x, boundary.y, boundary.w, boundary.h);
+  ctx.fillStyle = old;
 }
 
 function randomColor() {

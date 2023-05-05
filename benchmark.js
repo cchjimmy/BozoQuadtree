@@ -15,7 +15,7 @@ function init() {
   canvas.width = 800;
   canvas.height = 600;
 
-  qtree.setBounds({
+  qtree.setBound({
     x: canvas.width * 0.5,
     y: canvas.height * 0.5,
     w: canvas.width,
@@ -49,7 +49,7 @@ function init() {
   var end = performance.now();
   var time = end - start;
 
-  let total = qtree.array.length;
+  let total = qtree.array().length;
 
   var text = `Time spent for insertion of ${total} objects and retrieve once: ${Math.round(time)} ms. Retrieved: ${candidates.length} / ${total} (${candidates.length / total * 100} %) objects.`;
   console.log(`retrieved ${candidates.length} objects in ${time} ms`);
@@ -68,10 +68,7 @@ function init() {
 
   ctx.strokeStyle = 'red';
   drawQuadtree(qtree, ctx);
-
-  ctx.strokeStyle = 'yellow';
-  drawIntersectedBoundaries(qtree, cursor, ctx);
-
+  
   ctx.strokeStyle = 'blue';
   strokeRectangle(cursor, ctx);
 
@@ -89,18 +86,8 @@ function init() {
     }
   }
 
-  function drawIntersectedBoundaries(node, boundary, ctx) {
-    let b = node.boundary;
-    if (node.intersects(b, boundary)) strokeRectangle(b, ctx);
-    if (!node.children.length) return;
-    let c = node.children;
-    for (let i = 0; i < c.length; i++) {
-      if (c[i]) drawIntersectedBoundaries(c[i], boundary, ctx);
-    }
-  }
-
   function drawObjects(node, ctx) {
-    let o = node.array;
+    let o = node.array();
     for (let i = 0; i < o.length; i++) {
       if (o[i].check) continue;
       strokeRectangle(o[i], ctx);
