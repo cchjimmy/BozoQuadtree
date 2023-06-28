@@ -27,7 +27,7 @@
   }
 
   let q, qtree;
-  console.log(`time to insert ${objects.length} objects and query at once: ` + measure(() => {
+  let message = `time to insert ${objects.length} objects and query at once: ` + measure(() => {
     qtree = new BozoQuadtree({
       x: 0,
       y: 0,
@@ -40,7 +40,12 @@
     }
 
     q = qtree.remove(query);
-  }) + " ms");
+  }).toFixed(2) + " ms";
+
+  let p = document.createElement("p");
+  p.innerText = message;
+  p.style.color = "white";
+  document.body.appendChild(p);
 
   for (let i = 0; i < q.length; i++) {
     q[i].color = "pink";
@@ -51,6 +56,7 @@
 
 function draw(canvas, ctx, qtree, query) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
   for (let child in qtree.objects) {
     for (let i = 0; i < qtree.objects[child].length; i++) {
       let o = qtree.objects[child][i];
