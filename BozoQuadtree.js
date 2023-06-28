@@ -40,14 +40,14 @@
         if (!this.haveSplit(parent) && this.getDepth(parent) < this.maxDepth) {
           this.split(parent);
         }
+
         let index = -1;
         for (let j = 0; j < 4; j++) {
-          let k = parent + j;
-          if (this.contains(this.boundaries[k], object)) {
-            index = j;
-            break;
-          }
+          if (!this.contains(this.boundaries[parent + j], object)) continue;
+          index = j;
+          break;
         }
+
         if (index == -1) return parent;
         parent += index;
       }
@@ -106,7 +106,6 @@
      * true if boundary 1 contains boundary 2 fully
      */
     contains(b1, b2) {
-      if (b1.width * b1.height < b2.width * b2.height) return false;
       let hw1 = b1.width * 0.5;
       let hh1 = b1.height * 0.5;
       let x1 = b1.x + hw1;
@@ -115,7 +114,7 @@
       let hh2 = b2.height * 0.5;
       let x2 = b2.x + hw2;
       let y2 = b2.y + hh2;
-      return (x2 - x1) ** 2 < hw2 ** 2 && (y2 - y1) ** 2 < hh2;
+      return (x2 - x1) ** 2 < (hw1 - hw2) ** 2 && (y2 - y1) ** 2 < (hh1 - hh2) ** 2;
     }
 
     intersect(b1, b2) {

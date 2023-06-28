@@ -1,4 +1,4 @@
-function main() {
+(function main() {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
@@ -8,25 +8,22 @@ function main() {
   document.body.appendChild(canvas);
 
   let objects = new Array(10000);
-  let side = 10;
   for (let i = 0; i < objects.length; i++) {
     objects[i] = {
       x: random(0, canvas.width),
       y: random(0, canvas.height),
-      width: side,
-      height: side,
+      width: random(20, 60),
+      height: random(20, 60),
       color: "grey"
     }
   }
-
-  side *= 2;
   let query = {
-    x: random(side, canvas.width - side),
-    y: random(side, canvas.height - side),
+    x: random(0, canvas.width),
+    y: random(0, canvas.height),
     // x: 150,
     // y: 240,
-    width: side,
-    height: side
+    width: 60,
+    height: 60
   }
 
   let q, qtree;
@@ -42,7 +39,7 @@ function main() {
       qtree.insert(objects[i]);
     }
 
-    q = qtree.query(query);
+    q = qtree.remove(query);
   }) + " ms");
 
   for (let i = 0; i < q.length; i++) {
@@ -50,7 +47,7 @@ function main() {
   }
 
   draw(canvas, ctx, qtree, query);
-}
+}())
 
 function draw(canvas, ctx, qtree, query) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -85,5 +82,3 @@ function measure(func) {
   func();
   return performance.now() - past;
 }
-
-main();
