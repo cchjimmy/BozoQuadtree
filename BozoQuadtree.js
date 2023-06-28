@@ -1,191 +1,162 @@
-// reference: https://en.wikipedia.org/wiki/Quadtree#Pseudocode
-
-/**
- * used to specify boundaries for objects to insert into quadtree
- * @typedef boundary
- * @property {number} x x component of the boundary centroid
- * @property {number} y y component of the boundary centroid
- * @property {number} w full width of the boundary
- * @property {number} h full height of the boundary
- */
-
-/**
- * all boundaries have their origins at the center
- */
-export default class BozoQuadtree {
-  #allObjects;
-  constructor(boundary = { x: 50, y: 50, w: 100, h: 100 }, maxDepth = 4) {
-    this.objects = [];
-    this.children = new Array(4);
-    this.maxDepth = maxDepth;
-    this.depth = 0;
-    this.boundary = {};
-    this.childBoundaries = new Array(4);
-    this.#allObjects = new Map();
-    this.parent = null;
-    this.index = null;
-    
-    this.setBound(boundary);
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define([], factory);
+  } else if (typeof module === 'object' && module.exports) {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory();
+  } else {
+    // Browser globals (root is window)
+    root["BozoQuadtree"] = factory();
   }
+}(typeof self !== 'undefined' ? self : this, function () {
 
-  /**
-   * 
-   * @param {boundary} boundary 
-   */
-  setBound(boundary) {
-    this.clearTree();
-    this.boundary.x = boundary.x;
-    this.boundary.y = boundary.y;
-    this.boundary.w = boundary.w;
-    this.boundary.h = boundary.h;
-    let halfWidth = boundary.w * 0.5;
-    let halfHeight = boundary.h * 0.5;
-    this.childBoundaries.splice(0);
-    this.childBoundaries.push(
-      {
-        x: boundary.x - halfWidth * 0.5,
-        y: boundary.y - halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      },
-      {
-        x: boundary.x + halfWidth * 0.5,
-        y: boundary.y - halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      },
-      {
-        x: boundary.x + halfWidth * 0.5,
-        y: boundary.y + halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
-      },
-      {
-        x: boundary.x - halfWidth * 0.5,
-        y: boundary.y + halfHeight * 0.5,
-        w: halfWidth,
-        h: halfHeight
+  // Just return a value to define the module export.
+  // This example returns an object, but the module
+  // can return a function as the exported value.
+  return class BozoQuadtree {
+    constructor(boundary = { x: 0, y: 0, width: 100, height: 100 }, maxDepth = 4) {
+      this.checkObject(boundary);
+      this.maxDepth = maxDepth;
+      this.objects = {
+        "0": []
+      };
+      this.boundaries = {
+        "0": boundary
       }
-    );
-  }
+    }
 
-  getTreeContaining(object) {
-    // max depth achieved, return this tree
-    if (this.depth >= this.maxDepth) return this;
-    
-    for (let i = 0; i < this.childBoundaries.length; i++) {
-      if (!this.#contain(this.childBoundaries[i], object)) continue;
-      if (!this.children[i]) {
-        this.children[i] = new this.constructor(this.childBoundaries[i], this.maxDepth);
-        this.children[i].depth = this.depth + 1;
-        this.children[i].parent = this;
-        this.children[i].index = i;
+    insert(object) {
+      this.checkObject(object);
+      let index = this.getIndex(object);
+      this.objects[index] ??= [];
+      this.objects[index].push(object);
+    }
+
+    getIndex(object) {
+      let parent = "0";
+      for (let i = 0; i < this.maxDepth; i++) {
+        if (!this.haveSplit(parent) && this.getDepth(parent) < this.maxDepth) {
+          this.split(parent);
+        }
+        let index = -1;
+        for (let j = 0; j < 4; j++) {
+          let k = parent + j;
+          if (this.contains(this.boundaries[k], object)) {
+            index = j;
+            break;
+          }
+        }
+        if (index == -1) return parent;
+        parent += index;
       }
-      // child tree contains the object, call this function on child
-      return this.children[i].getTreeContaining(object);
+      return parent;
     }
-    // if no children contain boundary, return this tree
-    return this;
-  }
 
-  /**
-   * specify an object with rectangular boundary to be inserted into the quadtree
-   * @param {boundary} boundary 
-   * @returns 
-   */
-  insert(boundary) {
-    let tree = this.getTreeContaining(boundary);
-    tree.objects.push(boundary);
-    this.#allObjects.set(boundary, tree);
-  }
+    calculateBoundary(parent, index) {
+      return {
+        x: index % 2 ? parent.x + parent.width * 0.5 : parent.x,
+        y: index > 1 ? parent.y + parent.height * 0.5 : parent.y,
+        width: parent.width * 0.5,
+        height: parent.height * 0.5
+      }
+    }
 
-  /**
-   * 
-   * @param {boundary} boundary 
-   * @returns {...quadtreeObject} returns an array of objects within the boundary, with keys: object, tree
-   */
-  queryRange(boundary) {
-    let result = [];
-    for (let i = 0; i < this.objects.length; i++) {
-      if (this.#intersect(boundary, this.objects[i])) result.push(this.objects[i]);
+    checkObject(object) {
+      let mandatory = ["x", "y", "width", "height"];
+      for (let i = 0; i < mandatory.length; i++) {
+        if (!object.hasOwnProperty(mandatory[i])) throw console.trace(`Must define ${mandatory[i]} in object`);
+      }
     }
-    for (let i = 0; i < this.children.length; i++) {
-      if (!this.children[i]) continue; // accounts for empty child
-      if (this.#intersect(boundary, this.children[i].boundary)) result.push(...this.children[i].queryRange(boundary));
-    }
-    return result;
-  }
 
-  /**
-   * 
-   * @param {boundary} boundary1 
-   * @param {boundary} boundary2 
-   * @returns true if boundary1 intersects or contains boundary2 or vice versa
-   */
-  #intersect(boundary1, boundary2) {
-    // squaring is for eliminating negative values
-    return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w + boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h + boundary2.h) * 0.5) ** 2;
-  }
+    split(parentIndex) {
+      for (let i = 0; i < 4; i++) {
+        this.boundaries[parentIndex + i] = this.calculateBoundary(this.boundaries[parentIndex], i);
+      }
+    }
 
-  /**
-   * 
-   * @param {boundary} boundary1 
-   * @param {boundary} boundary2 
-   * @returns true only if boundary1 contains all of boundary2
-   */
-  #contain(boundary1, boundary2) {
-    if (boundary1.w * boundary1.h <= boundary2.w * boundary2.h) return false;
-    return (boundary1.x - boundary2.x) ** 2 < ((boundary1.w - boundary2.w) * 0.5) ** 2 && (boundary1.y - boundary2.y) ** 2 < ((boundary1.h - boundary2.h) * 0.5) ** 2;
-  }
+    haveSplit(parentIndex) {
+      return this.boundaries.hasOwnProperty(parentIndex + "0");
+    }
 
-  /**
-   * recurssively clear the tree of its objects and children
-   */
-  clearTree() {
-    for (let i = 0; i < this.children.length; i++) {
-      this.children[i]?.clearTree();
+    getDepth(parentIndex) {
+      return parentIndex.split("").length - 1;
     }
-    
-    this.#allObjects.clear();
-    this.objects.splice(0);
-    this.children.splice(0);
-    this.parent = null;
-  }
 
-  /**
-   * 
-   * @param {boundary} boundary
-   */
-  remove(boundary) {
-    let tree = this.getTreeContaining(boundary);
-    for(let i = 0; i < tree.objects.length; i++){
-      if(!this.#intersect(boundary, tree.objects[i])) continue;
-      tree.objects.splice(i, 1);
-      this.#allObjects.delete(tree.objects[i]);
+    remove(boundary) {
+      this.checkObject(boundary);
+      let index = this.getIndex(boundary);
+      let descendants = this.getDescendants(index);
+      descendants.push(index);
+      descendants.push(...this.getAncestors(index));
+      let removed = [];
+      for (let i = 0; i < descendants.length; i++) {
+        for (let j = 0; j < this.objects[descendants[i]].length; j++) {
+          if (!this.intersect(boundary, this.objects[descendants[i]][j])) continue;
+          removed.push(this.objects[descendants[i]].splice(j, 1)[0]);
+          j--;
+        }
+      }
+      return removed;
     }
-    for (let i = 0; i < tree.children.length; i++) {
-      if (!tree.children[i] || !this.#intersect(boundary, tree.children[i].boundary)) continue;
-      tree.children[i].remove(boundary);
+
+    /**
+     * true if boundary 1 contains boundary 2 fully
+     */
+    contains(b1, b2) {
+      if (b1.width * b1.height < b2.width * b2.height) return false;
+      return b1.x < b2.x && b1.x + b1.width > b2.x + b2.width && b1.y < b2.y && b1.y + b1.height > b2.y + b2.height;
+    }
+
+    intersect(b1, b2) {
+      let hw1 = b1.width * 0.5;
+      let hh1 = b1.height * 0.5;
+      let x1 = b1.x + hw1;
+      let y1 = b1.y + hh1;
+      let hw2 = b2.width * 0.5;
+      let hh2 = b2.height * 0.5;
+      let x2 = b2.x + hw2;
+      let y2 = b2.y + hh2;
+      return (x2 - x1) ** 2 < (hw1 + hw2) ** 2 && (y2 - y1) ** 2 < (hh1 + hh2) ** 2;
+    }
+
+    query(boundary) {
+      this.checkObject(boundary);
+      let index = this.getIndex(boundary);
+      let descendants = this.getDescendants(index);
+      descendants.push(index);
+      descendants.push(...this.getAncestors(index));
+      let result = [];
+      for (let i = 0; i < descendants.length; i++) {
+        for (let j = 0; j < this.objects[descendants[i]].length; j++) {
+          if (!this.intersect(boundary, this.objects[descendants[i]][j])) continue;
+          result.push(this.objects[descendants[i]][j]);
+        }
+      }
+      return result;
+    }
+
+    getDescendants(parentIndex) {
+      let result = [];
+      if (this.haveSplit(parentIndex)) {
+        for (let i = 0; i < 4; i++) {
+          let index = parentIndex + i;
+          if (!this.objects[index]) continue;
+          result.push(index);
+          result.push(...this.getDescendants(index));
+        }
+      }
+      return result;
+    }
+
+    getAncestors(index) {
+      let result = new Array(index.length - 1);
+      for (let i = 0; i < result.length; i++) {
+        result[i] = index.slice(0, i + 1);
+      }
+      return result;
     }
   }
-  
-  relocate(object) {
-    let tree = this.#allObjects.get(object);
-    if (!tree) return;
-    let tree1 = this.getTreeContaining(object);
-    if (tree == tree1) return;
-    this.#allObjects.set(object, tree1);
-    tree1.objects.push(object);
-    tree.objects.splice(tree.objects.indexOf(object), 1);
-  }
-  
-  array(bruteForce = false) {
-    if (!bruteForce) return Array.from(this.#allObjects.keys());
-    let all = [];
-    all.push(...this.objects);
-    for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i]) all.push(...this.children[i].getAll(bruteForce))
-    }
-    return all;
-  }
-}
+}));
