@@ -31,7 +31,6 @@
     insert(object) {
       this.checkObject(object);
       let index = this.getIndex(object);
-      this.objects[index] ??= [];
       this.objects[index].push(object);
     }
 
@@ -74,6 +73,7 @@
     split(parentIndex) {
       for (let i = 0; i < 4; i++) {
         this.boundaries[parentIndex + i] = this.calculateBoundary(this.boundaries[parentIndex], i);
+        this.objects[parentIndex + i] = [];
       }
     }
 
@@ -107,7 +107,15 @@
      */
     contains(b1, b2) {
       if (b1.width * b1.height < b2.width * b2.height) return false;
-      return b1.x < b2.x && b1.x + b1.width > b2.x + b2.width && b1.y < b2.y && b1.y + b1.height > b2.y + b2.height;
+      let hw1 = b1.width * 0.5;
+      let hh1 = b1.height * 0.5;
+      let x1 = b1.x + hw1;
+      let y1 = b1.y + hh1;
+      let hw2 = b2.width * 0.5;
+      let hh2 = b2.height * 0.5;
+      let x2 = b2.x + hw2;
+      let y2 = b2.y + hh2;
+      return (x2 - x1) ** 2 < hw2 ** 2 && (y2 - y1) ** 2 < hh2;
     }
 
     intersect(b1, b2) {
@@ -143,7 +151,6 @@
       if (this.haveSplit(parentIndex)) {
         for (let i = 0; i < 4; i++) {
           let index = parentIndex + i;
-          if (!this.objects[index]) continue;
           result.push(index);
           result.push(...this.getDescendants(index));
         }
