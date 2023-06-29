@@ -18,38 +18,33 @@
   // can return a function as the exported value.
   return class BozoQuadtree {
     constructor(boundary = { x: 0, y: 0, width: 100, height: 100 }, maxDepth = 4) {
-      this.checkObject(boundary);
       this.maxDepth = maxDepth;
       this.objects = {
         "0": []
-      };
+      }
       this.boundaries = {
         "0": boundary
       }
     }
 
     insert(object) {
-      this.checkObject(object);
-      let index = this.getIndex(object);
-      this.objects[index].push(object);
+      this.objects[this.getIndex(object)].push(object);
     }
 
     getIndex(object) {
       let parent = "0";
       for (let i = 0; i < this.maxDepth; i++) {
-        if (!this.haveSplit(parent) && this.getDepth(parent) < this.maxDepth) {
+        if (!this.hasSplit(parent) && this.getDepth(parent) < this.maxDepth) {
           this.split(parent);
         }
-
         let index = -1;
         for (let j = 0; j < 4; j++) {
-          if (!this.contains(this.boundaries[parent + j], object)) continue;
+          if (!this.contains(this.boundaries[parent + `${j}`], object)) continue;
           index = j;
           break;
         }
-
         if (index == -1) return parent;
-        parent += index;
+        parent += `${index}`;
       }
       return parent;
     }
@@ -63,21 +58,14 @@
       }
     }
 
-    checkObject(object) {
-      let mandatory = ["x", "y", "width", "height"];
-      for (let i = 0; i < mandatory.length; i++) {
-        if (!object.hasOwnProperty(mandatory[i])) throw console.trace(`Must define ${mandatory[i]} in object`);
-      }
-    }
-
     split(parentIndex) {
       for (let i = 0; i < 4; i++) {
-        this.boundaries[parentIndex + i] = this.calculateBoundary(this.boundaries[parentIndex], i);
-        this.objects[parentIndex + i] = [];
+        this.boundaries[parentIndex + `${i}`] = this.calculateBoundary(this.boundaries[parentIndex], i);
+        this.objects[parentIndex + `${i}`] = [];
       }
     }
 
-    haveSplit(parentIndex) {
+    hasSplit(parentIndex) {
       return this.boundaries.hasOwnProperty(parentIndex + "0");
     }
 
@@ -86,16 +74,13 @@
     }
 
     remove(boundary) {
-      this.checkObject(boundary);
-      let index = this.getIndex(boundary);
-      let descendants = this.getDescendants(index);
-      descendants.push(index);
-      descendants.push(...this.getAncestors(index));
+      let indices = this.getIndices(boundary);
       let removed = [];
-      for (let i = 0; i < descendants.length; i++) {
-        for (let j = 0; j < this.objects[descendants[i]].length; j++) {
-          if (!this.intersect(boundary, this.objects[descendants[i]][j])) continue;
-          removed.push(this.objects[descendants[i]].splice(j, 1)[0]);
+      for (let i = 0; i < indices.length; i++) {
+        let o = this.objects[indices[i]];
+        for (let j = 0; j < o.length; j++) {
+          if (!this.intersect(boundary, o[j])) continue;
+          removed.push(o.splice(j, 1)[0]);
           j--;
         }
       }
@@ -130,39 +115,29 @@
     }
 
     query(boundary) {
-      this.checkObject(boundary);
-      let index = this.getIndex(boundary);
-      let descendants = this.getDescendants(index);
-      descendants.push(index);
-      descendants.push(...this.getAncestors(index));
+      let indices = this.getIndex(boundary);
       let result = [];
-      for (let i = 0; i < descendants.length; i++) {
-        for (let j = 0; j < this.objects[descendants[i]].length; j++) {
-          if (!this.intersect(boundary, this.objects[descendants[i]][j])) continue;
-          result.push(this.objects[descendants[i]][j]);
+      for (let i = 0; i < indices.length; i++) {
+        let o = this.objects[indices[i]];
+        for (let j = 0; j < o.length; j++) {
+          if (!this.intersect(boundary, o[j])) continue;
+          result.push(o[j]);
         }
       }
       return result;
     }
 
-    getDescendants(parentIndex) {
-      let result = [];
-      if (this.haveSplit(parentIndex)) {
-        for (let i = 0; i < 4; i++) {
-          let index = parentIndex + i;
-          result.push(index);
-          result.push(...this.getDescendants(index));
-        }
+    getIndices(object, root = "0") {
+      let indices = [root];
+      if (!this.hasSplit(root)) {
+        indices.push(root);
+        return indices;
       }
-      return result;
-    }
-
-    getAncestors(index) {
-      let result = new Array(index.length - 1);
-      for (let i = 0; i < result.length; i++) {
-        result[i] = index.slice(0, i + 1);
+      for (let i = 0; i < 4; i++) {
+        if (!this.intersect(object, this.boundaries[root + `${i}`])) continue;
+        indices.push(...this.getIndices(object, root + `${i}`));
       }
-      return result;
+      return indices;
     }
   }
 }));

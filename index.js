@@ -22,8 +22,8 @@
     y: random(0, canvas.height),
     // x: 150,
     // y: 240,
-    width: 60,
-    height: 60
+    width: 32,
+    height: 32
   }
 
   let q, qtree;
@@ -34,7 +34,7 @@
       width: canvas.width,
       height: canvas.height
     });
-    
+
     for (let i = 0; i < objects.length; i++) {
       qtree.insert(objects[i]);
     }
@@ -51,15 +51,17 @@
     q[i].color = "pink";
   }
 
+  // console.log(JSON.stringify(qtree));
+
   draw(canvas, ctx, qtree, query);
 }())
 
 function draw(canvas, ctx, qtree, query) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for (let child in qtree.objects) {
-    for (let i = 0; i < qtree.objects[child].length; i++) {
-      let o = qtree.objects[child][i];
+  for (let index in qtree.objects) {
+    for (let i = 0; i < qtree.objects[index].length; i++) {
+      let o = qtree.objects[index][i];
       ctx.strokeStyle = o.color;
       ctx.strokeRect(o.x, o.y, o.width, o.height);
     }
@@ -74,9 +76,12 @@ function draw(canvas, ctx, qtree, query) {
   ctx.strokeStyle = "red";
   ctx.strokeRect(query.x, query.y, query.width, query.height);
 
-  let b = qtree.boundaries[qtree.getIndex(query)];
   ctx.strokeStyle = "red";
-  ctx.strokeRect(b.x, b.y, b.width, b.height);
+  let indices = qtree.getIndices(query);
+  for (let i = 0; i < indices.length; i++) {
+    let b = qtree.boundaries[indices[i]];
+    ctx.strokeRect(b.x, b.y, b.width, b.height);
+  }
 }
 
 function random(min, max) {
