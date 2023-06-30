@@ -17,6 +17,7 @@
       color: "grey"
     }
   }
+  
   let query = {
     x: random(0, canvas.width),
     y: random(0, canvas.height),
@@ -50,8 +51,6 @@
   for (let i = 0; i < q.length; i++) {
     q[i].color = "pink";
   }
-
-  // console.log(JSON.stringify(qtree));
 
   draw(canvas, ctx, qtree, query);
 }())

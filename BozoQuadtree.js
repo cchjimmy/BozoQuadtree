@@ -37,14 +37,14 @@
         if (!this.hasSplit(parent) && this.getDepth(parent) < this.maxDepth) {
           this.split(parent);
         }
-        let index = -1;
+        let index;
         for (let j = 0; j < 4; j++) {
           if (!this.contains(this.boundaries[parent + `${j}`], object)) continue;
-          index = j;
+          index = `${j}`;
           break;
         }
-        if (index == -1) return parent;
-        parent += `${index}`;
+        if (!index) return parent;
+        parent += index;
       }
       return parent;
     }
@@ -80,7 +80,7 @@
         let o = this.objects[indices[i]];
         for (let j = 0; j < o.length; j++) {
           if (!this.intersect(boundary, o[j])) continue;
-          removed.push(o.splice(j, 1)[0]);
+          removed.push(...o.splice(j, 1));
           j--;
         }
       }
@@ -115,7 +115,7 @@
     }
 
     query(boundary) {
-      let indices = this.getIndex(boundary);
+      let indices = this.getIndices(boundary);
       let result = [];
       for (let i = 0; i < indices.length; i++) {
         let o = this.objects[indices[i]];
@@ -129,10 +129,7 @@
 
     getIndices(object, root = "0") {
       let indices = [root];
-      if (!this.hasSplit(root)) {
-        indices.push(root);
-        return indices;
-      }
+      if (!this.hasSplit(root)) return indices;
       for (let i = 0; i < 4; i++) {
         if (!this.intersect(object, this.boundaries[root + `${i}`])) continue;
         indices.push(...this.getIndices(object, root + `${i}`));
