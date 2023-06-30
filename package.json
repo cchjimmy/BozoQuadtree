@@ -1,0 +1,22 @@
+{
+  "name": "bozoquadtree",
+  "version": "1.0.0",
+  "description": "A quadtree class written in JavaScript. It is able to store 2d rectangular shapes, and it does not create itself recurrsively to store data.",
+  "main": "BozoQuadtree.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cchjimmy/BozoQuadtree.git"
+  },
+  "keywords": [
+    "quadtree"
+  ],
+  "author": "cchjimmy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cchjimmy/BozoQuadtree/issues"
+  },
+  "homepage": "https://github.com/cchjimmy/BozoQuadtree#readme"
+}
