@@ -91,6 +91,7 @@
      * true if boundary 1 contains boundary 2 fully
      */
     contains(b1, b2) {
+      if (b1.width * b1.height <= b2.width * b2.height) return false;
       let hw1 = b1.width * 0.5;
       let hh1 = b1.height * 0.5;
       let x1 = b1.x + hw1;
